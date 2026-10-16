@@ -94,6 +94,46 @@ def login(
     )
 
 
+@router.post(
+    "/platform-admin/login",
+    response_model=TokenResponse,
+    summary="Platform Administrator Login with server-side privilege verification",
+)
+def platform_admin_login(
+    data: LoginRequest,
+    db: Session = Depends(get_db),
+):
+    email = str(data.email).strip().lower()
+
+    user = db.scalar(
+        select(User).where(User.email == email)
+    )
+
+    if (
+        user is None
+        or not user.is_active
+        or not verify_password(data.password, user.password_hash)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_platform_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Platform administrator privileges required",
+        )
+
+    token = create_access_token(str(user.id))
+
+    return TokenResponse(
+        access_token=token,
+        expires_in=settings.access_token_expire_minutes * 60,
+    )
+
+
 @router.get("/me", response_model=UserResponse)
 def get_me(
     current_user: User = Depends(get_current_user),

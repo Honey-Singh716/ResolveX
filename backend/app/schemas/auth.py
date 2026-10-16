@@ -19,6 +19,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     full_name: str
     is_active: bool
+    is_platform_admin: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 

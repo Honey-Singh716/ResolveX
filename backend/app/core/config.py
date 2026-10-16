@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     database_url: str | None = None
     jwt_secret_key: str
     access_token_expire_minutes: int = 30
+    platform_admin_email: str | None = None
+    platform_admin_password: str | None = None
+    platform_admin_allowed_domain: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

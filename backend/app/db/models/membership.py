@@ -22,7 +22,7 @@ class Membership(Base):
             name="uq_membership_org_user",
         ),
         CheckConstraint(
-            "role IN ('owner', 'admin', 'manager', 'staff', 'member')",
+            "role IN ('owner', 'admin', 'manager', 'staff', 'member', 'client')",
             name="ck_membership_role",
         ),
     )

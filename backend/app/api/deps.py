@@ -38,3 +38,14 @@ def get_current_user(
         raise unauthorized
 
     return user
+
+
+def get_current_platform_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if not current_user.is_platform_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Platform administrator privileges required",
+        )
+    return current_user
