@@ -23,6 +23,11 @@ class User(Base):
         nullable=False,
     )
 
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
     full_name: Mapped[str] = mapped_column(
         String(150),
         nullable=False,
