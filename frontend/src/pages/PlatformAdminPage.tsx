@@ -31,6 +31,7 @@ export const PlatformAdminPage: React.FC = () => {
   // Stats State
   const [stats, setStats] = useState<PlatformStatsResponse | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
+  const [statsError, setStatsError] = useState<string | null>(null)
 
   // Verification Queue State
   const [orgs, setOrgs] = useState<OrganizationPlatformResponse[]>([])
@@ -57,10 +58,11 @@ export const PlatformAdminPage: React.FC = () => {
   const loadStats = async () => {
     try {
       setStatsLoading(true)
+      setStatsError(null)
       const data = await api.platform.getStats()
       setStats(data)
     } catch (err: unknown) {
-      // non-blocking
+      setStatsError(err instanceof Error ? err.message : 'Failed to load platform aggregate statistics.')
     } finally {
       setStatsLoading(false)
     }
@@ -414,29 +416,60 @@ export const PlatformAdminPage: React.FC = () => {
 
               {/* Quick Queue Summary Card */}
               <div className="card" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Clock size={18} style={{ color: '#fbbf24' }} /> Pending Organization Verification Requests
-                    </h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
-                      Organizations requesting activation on ResolveX require platform review.
-                    </p>
+                    {stats.pending_organizations > 0 ? (
+                      <>
+                        <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Clock size={18} style={{ color: '#fbbf24' }} /> {stats.pending_organizations} Pending Organization Verification Request{stats.pending_organizations > 1 ? 's' : ''}
+                        </h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                          Organizations requesting activation on ResolveX require platform review.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#34d399' }}>
+                          <CheckCircle2 size={18} style={{ color: '#34d399' }} /> Verification Queue All Caught Up
+                        </h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                          All organization verification requests have been reviewed and approved.
+                        </p>
+                      </>
+                    )}
                   </div>
                   <button
                     onClick={() => {
-                      setStatusFilter('pending')
+                      setStatusFilter(stats.pending_organizations > 0 ? 'pending' : '')
                       setActiveTab('queue')
                     }}
                     className="btn btn-secondary btn-sm"
                   >
-                    Open Verification Queue →
+                    {stats.pending_organizations > 0 ? 'Review Pending Queue →' : 'View All Organizations →'}
                   </button>
                 </div>
               </div>
             </>
           ) : (
-            <EmptyState title="Stats unavailable" description="Could not load platform statistics." />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <ErrorAlert
+                message={statsError || 'Could not load platform statistics.'}
+                onDismiss={() => setStatsError(null)}
+              />
+              <EmptyState
+                title="Stats unavailable"
+                description={statsError || 'Could not load platform statistics.'}
+                action={
+                  <button
+                    onClick={loadStats}
+                    className="btn btn-secondary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <RefreshCw size={14} /> Retry Loading Statistics
+                  </button>
+                }
+              />
+            </div>
           )}
         </div>
       )}

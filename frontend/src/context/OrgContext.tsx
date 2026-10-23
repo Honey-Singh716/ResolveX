@@ -87,7 +87,7 @@ export const OrgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isOwner = role === 'owner'
   const isAdmin = role === 'admin' || isOwner
   const isManager = role === 'manager' || isAdmin
-  const canManageMembers = isAdmin
+  const canManageMembers = isAdmin || role === 'manager' || role === 'staff'
   const canManageIssues = isManager || role === 'staff'
 
   return (

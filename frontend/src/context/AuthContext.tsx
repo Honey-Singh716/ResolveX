@@ -7,8 +7,8 @@ interface AuthContextType {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (credentials: LoginCredentials) => Promise<void>
-  platformAdminLogin: (credentials: LoginCredentials) => Promise<void>
+  login: (credentials: LoginCredentials) => Promise<User>
+  platformAdminLogin: (credentials: LoginCredentials) => Promise<User>
   register: (data: RegisterData) => Promise<void>
   logout: () => void
   refreshUser: () => Promise<void>
@@ -62,20 +62,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials): Promise<User> => {
     const tokenRes = await api.auth.login(credentials)
     api.setToken(tokenRes.access_token)
     setToken(tokenRes.access_token)
     const userData = await api.auth.getMe()
     setUser(userData)
+    return userData
   }
 
-  const platformAdminLogin = async (credentials: LoginCredentials) => {
+  const platformAdminLogin = async (credentials: LoginCredentials): Promise<User> => {
     const tokenRes = await api.auth.platformAdminLogin(credentials)
     api.setToken(tokenRes.access_token)
     setToken(tokenRes.access_token)
     const userData = await api.auth.getMe()
     setUser(userData)
+    return userData
   }
 
   const register = async (data: RegisterData) => {

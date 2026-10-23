@@ -473,9 +473,23 @@ export const OrganizationsPage: React.FC = () => {
         <div className="modal-backdrop" onClick={() => setIsJoinModalOpen(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ marginBottom: '0.5rem' }}>Join Organization with Code</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-              Enter the invite or join code provided by your organization administrators.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              Enter the join code shared by your organization admin. Your request will be reviewed and approved by
+              an admin — once approved, you can log issues for that organization.
             </p>
+            <div
+              style={{
+                background: 'rgba(99, 102, 241, 0.08)',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.5rem 0.75rem',
+                marginBottom: '1.25rem',
+                fontSize: '0.8rem',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <strong style={{ color: '#818cf8' }}>How it works:</strong> Submit code → Admin reviews &amp; approves → You become a <em>Client</em> member → Post issues to that organization.
+            </div>
 
             <form onSubmit={handleJoinByCode}>
               <div className="form-group">

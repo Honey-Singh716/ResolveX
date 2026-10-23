@@ -25,9 +25,14 @@ export const LoginPage: React.FC = () => {
 
     try {
       setIsSubmitting(true)
-      await login({ email: email.trim(), password })
-      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/home'
-      navigate(from, { replace: true })
+      const loggedInUser = await login({ email: email.trim(), password })
+      if (loggedInUser.is_platform_admin) {
+        navigate('/platform-admin/dashboard', { replace: true })
+      } else {
+        const from = (location.state as { from?: { pathname?: string } })?.from?.pathname
+        const targetPath = from && !from.startsWith('/platform-admin') ? from : '/home'
+        navigate(targetPath, { replace: true })
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.')
     } finally {

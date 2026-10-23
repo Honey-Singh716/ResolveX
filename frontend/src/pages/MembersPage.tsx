@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowLeft, Check, Copy, Key, RefreshCw, Trash2, UserCheck, UserPlus, UserX, Clock } from 'lucide-react'
+import { ArrowLeft, UserCheck, UserPlus, UserX, Clock } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
@@ -12,10 +12,11 @@ import type { AddMemberData, Member, MembershipRequest, OrgRole } from '../types
 
 export const MembersPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>()
-  const { currentOrg, canManageMembers, isOwner } = useOrg()
+  const { currentOrg, isAdmin, isOwner, userRole } = useOrg()
   const { user } = useAuth()
 
   const activeOrgId = orgId || currentOrg?.id
+  const canAddMembers = userRole === 'owner' || userRole === 'manager' || userRole === 'staff'
 
   const [activeTab, setActiveTab] = useState<'members' | 'requests'>('members')
   const [members, setMembers] = useState<Member[]>([])
@@ -24,15 +25,12 @@ export const MembersPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  // Join Code state
-  const [joinCode, setJoinCode] = useState<string | null>(null)
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false)
-  const [copiedCode, setCopiedCode] = useState(false)
-
   // Invite modal state
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<OrgRole>('client')
+  const [inviteRole, setInviteRole] = useState<OrgRole>(
+    userRole === 'staff' ? 'client' : 'staff'
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Request approval roles state
@@ -45,7 +43,7 @@ export const MembersPage: React.FC = () => {
       setError(null)
       const [membersRes, requestsRes] = await Promise.all([
         api.organizations.listMembers(activeOrgId, 1, 100),
-        canManageMembers
+        userRole === 'staff'
           ? api.organizations.listMembershipRequests(activeOrgId, 'pending')
           : Promise.resolve({ requests: [] }),
       ])
@@ -60,42 +58,7 @@ export const MembersPage: React.FC = () => {
 
   useEffect(() => {
     loadData()
-  }, [activeOrgId, canManageMembers])
-
-  const handleGenerateJoinCode = async () => {
-    if (!activeOrgId) return
-    try {
-      setIsGeneratingCode(true)
-      setError(null)
-      const res = await api.organizations.getJoinCode(activeOrgId)
-      setJoinCode(res.join_code)
-      setSuccessMsg('Join code generated successfully!')
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to generate join code.')
-    } finally {
-      setIsGeneratingCode(false)
-    }
-  }
-
-  const handleRevokeJoinCode = async () => {
-    if (!activeOrgId) return
-    if (!window.confirm('Are you sure you want to revoke the active join code? New users will not be able to use it.')) return
-    try {
-      setError(null)
-      await api.organizations.revokeJoinCode(activeOrgId)
-      setJoinCode(null)
-      setSuccessMsg('Join code revoked successfully.')
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to revoke join code.')
-    }
-  }
-
-  const handleCopyCode = () => {
-    if (!joinCode) return
-    navigator.clipboard.writeText(joinCode)
-    setCopiedCode(true)
-    setTimeout(() => setCopiedCode(false), 2000)
-  }
+  }, [activeOrgId, isAdmin, userRole])
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,7 +74,7 @@ export const MembersPage: React.FC = () => {
       await api.organizations.addMember(activeOrgId, data)
       setIsInviteModalOpen(false)
       setInviteEmail('')
-      setInviteRole('client')
+      setInviteRole(userRole === 'staff' ? 'client' : 'staff')
       setSuccessMsg(`Member ${data.email} added successfully!`)
       loadData()
     } catch (err: unknown) {
@@ -186,8 +149,6 @@ export const MembersPage: React.FC = () => {
     return <LoadingSpinner fullPage label="Loading members and requests..." />
   }
 
-  const isOrgApproved = currentOrg?.verification_status === 'approved'
-
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <div style={{ marginBottom: '1.25rem' }}>
@@ -210,10 +171,10 @@ export const MembersPage: React.FC = () => {
           <div>
             <h1>Team &amp; Memberships</h1>
             <p style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Manage tenant access, join codes, staff assignments, and permissions
+              Manage organization members and issue resolution access
             </p>
           </div>
-          {canManageMembers && (
+          {canAddMembers && (
             <button onClick={() => setIsInviteModalOpen(true)} className="btn btn-primary">
               <UserPlus size={16} /> Add Member
             </button>
@@ -249,72 +210,8 @@ export const MembersPage: React.FC = () => {
         </div>
       )}
 
-      {/* Join Code Management Card for Admins */}
-      {canManageMembers && (
-        <div className="card" style={{ marginBottom: '1.5rem', background: 'var(--bg-surface-elevated)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                <Key size={18} style={{ color: 'var(--primary)' }} />
-                <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Organization Join Code</h3>
-              </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Share this secure code with clients or staff to allow them to submit membership requests.
-              </p>
-            </div>
-
-            {!isOrgApproved ? (
-              <div style={{ fontSize: '0.8rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Clock size={14} /> Join code generation is available once platform verification is approved.
-              </div>
-            ) : joinCode ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <div
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-medium)',
-                    padding: '0.4rem 0.8rem',
-                    borderRadius: 'var(--radius-sm)',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
-                    fontSize: '1rem',
-                    color: 'var(--primary)',
-                  }}
-                >
-                  {joinCode}
-                </div>
-                <button onClick={handleCopyCode} className="btn btn-secondary btn-sm" title="Copy code">
-                  {copiedCode ? <Check size={14} style={{ color: '#34d399' }} /> : <Copy size={14} />}
-                  {copiedCode ? 'Copied' : 'Copy'}
-                </button>
-                <button
-                  onClick={handleGenerateJoinCode}
-                  className="btn btn-secondary btn-sm"
-                  title="Rotate code"
-                  disabled={isGeneratingCode}
-                >
-                  <RefreshCw size={14} /> Rotate
-                </button>
-                <button onClick={handleRevokeJoinCode} className="btn btn-danger btn-sm" title="Revoke code">
-                  <Trash2 size={14} /> Revoke
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleGenerateJoinCode}
-                className="btn btn-secondary btn-sm"
-                disabled={isGeneratingCode}
-              >
-                <Key size={14} /> {isGeneratingCode ? 'Generating...' : 'Generate / Reveal Join Code'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Tabs */}
-      {canManageMembers && (
+      {userRole === 'staff' && (
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)' }}>
           <button
             onClick={() => setActiveTab('members')}
@@ -378,7 +275,7 @@ export const MembersPage: React.FC = () => {
             <tbody>
               {members.map((member) => {
                 const isSelf = member.user_id === user?.id
-                const canEditThisMember = isOwner || (canManageMembers && member.role !== 'owner' && member.role !== 'admin')
+                const canEditThisMember = isOwner || (isAdmin && member.role !== 'owner' && member.role !== 'admin')
                 return (
                   <tr key={member.id}>
                     <td>
@@ -418,12 +315,8 @@ export const MembersPage: React.FC = () => {
                           value={member.role}
                           onChange={(e) => handleRoleChange(member.user_id, e.target.value as OrgRole)}
                         >
-                          {isOwner && <option value="owner">Owner</option>}
-                          {isOwner && <option value="admin">Admin</option>}
                           <option value="manager">Manager</option>
                           <option value="staff">Staff</option>
-                          <option value="client">Client</option>
-                          <option value="member">Member</option>
                         </select>
                       ) : (
                         <RoleBadge role={member.role} />
@@ -466,7 +359,7 @@ export const MembersPage: React.FC = () => {
       )}
 
       {/* Tab 2: Pending Membership Requests */}
-      {activeTab === 'requests' && canManageMembers && (
+      {activeTab === 'requests' && userRole === 'staff' && (
         <div>
           {requests.length === 0 ? (
             <EmptyState
@@ -511,9 +404,9 @@ export const MembersPage: React.FC = () => {
                           }
                         >
                           <option value="client">Client / Reporter</option>
-                          <option value="staff">Staff</option>
-                          <option value="manager">Manager</option>
-                          {isOwner && <option value="admin">Admin</option>}
+                          {userRole !== 'staff' && <option value="staff">Staff</option>}
+                          {userRole !== 'staff' && <option value="manager">Manager</option>}
+                          {userRole !== 'staff' && isOwner && <option value="admin">Admin</option>}
                         </select>
                       </td>
                       <td style={{ textAlign: 'right' }}>
@@ -544,7 +437,7 @@ export const MembersPage: React.FC = () => {
       )}
 
       {/* Add Member Modal */}
-      {isInviteModalOpen && (
+      {isInviteModalOpen && canAddMembers && (
         <div className="modal-backdrop" onClick={() => setIsInviteModalOpen(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ marginBottom: '0.5rem' }}>Add Organization Member</h2>
@@ -578,11 +471,24 @@ export const MembersPage: React.FC = () => {
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as OrgRole)}
                 >
-                  <option value="client">Client — Report issues and view updates</option>
-                  <option value="staff">Staff — Resolve issues and handle operations</option>
-                  <option value="manager">Manager — Assign issues and triage tickets</option>
-                  {isOwner && <option value="admin">Admin — Manage org settings &amp; members</option>}
+                  {userRole === 'owner' || userRole === 'manager' ? (
+                    <>
+                      <option value="staff">Staff — Resolve issues and handle operations</option>
+                      <option value="manager">Manager — Assign issues and triage tickets</option>
+                    </>
+                  ) : (
+                    <option value="client">Client — Report issues and view updates</option>
+                  )}
                 </select>
+                {userRole === 'owner' || userRole === 'manager' ? (
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                    Organization managers can add Staff or Manager members to handle organization issues.
+                  </p>
+                ) : userRole === 'staff' ? (
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                    Staff can add Clients who need to report an issue directly to this organization.
+                  </p>
+                ) : null}
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>

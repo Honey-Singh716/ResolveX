@@ -12,7 +12,8 @@ export const PriorityBadge: React.FC<{ priority: IssuePriority | string }> = ({ 
 }
 
 export const RoleBadge: React.FC<{ role: OrgRole | string }> = ({ role }) => {
-  return <span className="badge badge-role">{role}</span>
+  const label = role === 'owner' ? 'Manager' : role.charAt(0).toUpperCase() + role.slice(1)
+  return <span className="badge badge-role">{label}</span>
 }
 
 export const VerificationBadge: React.FC<{ status: string }> = ({ status }) => {

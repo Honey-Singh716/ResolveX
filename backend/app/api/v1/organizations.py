@@ -105,6 +105,26 @@ def _require_admin(
     return org, membership
 
 
+def _require_membership_request_reviewer(
+    db: Session,
+    org_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> tuple[Organization, Membership]:
+    org = db.get(Organization, org_id)
+    if org is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found",
+        )
+    membership = _require_membership(db, org_id, user_id)
+    if membership.role not in ("owner", "admin", "staff"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only organization admins or staff can review client membership requests",
+        )
+    return org, membership
+
+
 def _org_to_response(org: Organization, role: str) -> OrganizationResponse:
     return OrganizationResponse(
         id=org.id,
@@ -324,19 +344,19 @@ def join_by_code(
     )
     db.add(req)
 
-    # Notify organization owners and admins
-    admins = db.scalars(
+    # Notify organization staff who handle client onboarding.
+    staff_members = db.scalars(
         select(Membership).where(
             Membership.organization_id == org.id,
-            Membership.role.in_(("owner", "admin")),
+            Membership.role == "staff",
         )
     ).all()
-    for adm in admins:
+    for staff_member in staff_members:
         db.add(
             Notification(
                 id=uuid.uuid4(),
                 organization_id=org.id,
-                recipient_id=adm.user_id,
+                recipient_id=staff_member.user_id,
                 actor_id=current_user.id,
                 type="issue_status_changed",
                 title="New Membership Request",
@@ -684,6 +704,7 @@ def list_members(
             full_name=u.full_name,
             role=m.role,
             is_active=u.is_active,
+            created_at=u.created_at,
         )
         for m, u in rows
     ]
@@ -708,12 +729,7 @@ def add_member(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> MemberResponse:
-    """
-    Add a registered user to an organization.
-    - Caller must be an owner or admin.
-    - Admins cannot assign owner or admin roles (privilege escalation prevention).
-    - Prevents duplicate memberships.
-    """
+    """Add a registered user with the role allowed for the caller's position."""
     org = db.get(Organization, org_id)
     if org is None:
         raise HTTPException(
@@ -722,16 +738,32 @@ def add_member(
         )
     caller_membership = _require_membership(db, org_id, current_user.id)
 
-    if caller_membership.role not in ("owner", "admin"):
+    if caller_membership.role not in ("owner", "admin", "manager", "staff"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organization owners and admins can add members",
+            detail="Only organization admins, managers, or staff can add members",
         )
 
-    if caller_membership.role == "admin" and data.role in ("owner", "admin"):
+    allowed_roles: dict[str, tuple[str, ...]] = {
+        "owner": ("admin", "manager", "staff", "member"),
+        "admin": ("manager", "staff", "member"),
+        "manager": ("staff", "member"),
+        "staff": ("client",),
+    }
+    if data.role not in allowed_roles[caller_membership.role]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admins cannot assign owner or admin roles",
+            detail=(
+                f"Organization {caller_membership.role}s can only add: "
+                f"{', '.join(allowed_roles[caller_membership.role])}"
+            ),
+        )
+
+    # Owner role can only be transferred via the ownership-transfer workflow
+    if data.role == "owner":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Owner role cannot be assigned directly. Use the Transfer Ownership workflow instead.",
         )
 
     target_user = db.scalar(
@@ -841,6 +873,20 @@ def update_member_role(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Admins cannot promote a member to owner or admin",
             )
+
+    # Client role can only be granted via the membership-request approval flow
+    if data.role == "client":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Client role cannot be assigned via role update. Use the Pending Requests approval flow to approve client membership requests.",
+        )
+
+    # Owner role can only be transferred via the ownership-transfer workflow
+    if data.role == "owner":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Owner role cannot be assigned directly. Use the Transfer Ownership workflow instead.",
+        )
 
     if target_membership.role == "owner" and data.role != "owner":
         owner_count = db.scalar(
@@ -1048,7 +1094,7 @@ def list_membership_requests(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> MembershipRequestListResponse:
-    org, _ = _require_admin(db, org_id, current_user.id)
+    org, reviewer_membership = _require_membership_request_reviewer(db, org_id, current_user.id)
 
     query = (
         select(MembershipRequest, User.email, User.full_name)
@@ -1058,6 +1104,8 @@ def list_membership_requests(
 
     if status_filter:
         query = query.where(MembershipRequest.status == status_filter.strip().lower())
+    if reviewer_membership.role == "staff":
+        query = query.where(MembershipRequest.role == "client")
 
     total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
     offset = (page - 1) * page_size
@@ -1100,7 +1148,13 @@ def approve_membership_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> MembershipRequestResponse:
-    org, admin_membership = _require_admin(db, org_id, current_user.id)
+    org, admin_membership = _require_membership_request_reviewer(db, org_id, current_user.id)
+
+    if admin_membership.role == "staff" and data.role != "client":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Staff can only approve client membership requests",
+        )
 
     # Admins cannot assign owner or admin roles
     if admin_membership.role == "admin" and data.role in ("owner", "admin"):
@@ -1207,7 +1261,7 @@ def reject_membership_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> MembershipRequestResponse:
-    org, _ = _require_admin(db, org_id, current_user.id)
+    org, _ = _require_membership_request_reviewer(db, org_id, current_user.id)
 
     req = db.scalar(
         select(MembershipRequest).where(

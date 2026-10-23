@@ -67,8 +67,12 @@ export const PlatformAdminGuard: React.FC<{ children: React.ReactNode }> = ({ ch
     return <LoadingSpinner fullPage label="Verifying platform administrator credentials..." />
   }
 
-  if (!user || !user.is_platform_admin) {
+  if (!user) {
     return <Navigate to="/platform-admin/login" state={{ from: location }} replace />
+  }
+
+  if (!user.is_platform_admin) {
+    return <Navigate to="/home" replace />
   }
 
   return <>{children}</>

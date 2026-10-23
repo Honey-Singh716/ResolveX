@@ -29,7 +29,7 @@ describe('Badges', () => {
 
   it('renders role badge correctly', () => {
     render(<RoleBadge role="owner" />)
-    expect(screen.getByText('owner')).toBeInTheDocument()
-    expect(screen.getByText('owner')).toHaveClass('badge-role')
+    expect(screen.getByText('Manager')).toBeInTheDocument()
+    expect(screen.getByText('Manager')).toHaveClass('badge-role')
   })
 })

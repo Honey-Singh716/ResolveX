@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import {
   Briefcase,
   ChevronDown,
-  Inbox,
   LogOut,
   ShieldAlert,
   ShieldCheck,
@@ -99,14 +98,6 @@ export const PlatformAdminLayout: React.FC = () => {
             <ShieldAlert size={16} /> Governance Dashboard
           </NavLink>
 
-          <NavLink
-            to="/client/dashboard"
-            className="nav-link"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#a7f3d0' }}
-          >
-            <Inbox size={16} /> Client Portal
-          </NavLink>
-
           {approvedOrgs.length > 0 && (
             <NavLink
               to="/organization/dashboard"
@@ -199,17 +190,6 @@ export const PlatformAdminLayout: React.FC = () => {
                     Platform Administrator
                   </span>
                 </div>
-
-                <button
-                  onClick={() => {
-                    setUserDropdownOpen(false)
-                    navigate('/client/dashboard')
-                  }}
-                  className="btn-ghost btn-sm"
-                  style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem', color: '#34d399' }}
-                >
-                  <Inbox size={15} /> Client Portal
-                </button>
 
                 {approvedOrgs.length > 0 && (
                   <button

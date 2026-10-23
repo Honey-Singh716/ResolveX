@@ -23,7 +23,7 @@ import type { IssueResponse } from '../types/issue'
 import type { MembershipRequest, OrgRole } from '../types/organization'
 
 export const OrgDashboardPage: React.FC = () => {
-  const { currentOrg, isAdmin } = useOrg()
+  const { currentOrg, isAdmin, userRole } = useOrg()
   const navigate = useNavigate()
 
   const [issues, setIssues] = useState<IssueResponse[]>([])
@@ -49,7 +49,7 @@ export const OrgDashboardPage: React.FC = () => {
       const issuesRes = await api.issues.list(orgId, { page: 1, page_size: 50 })
       setIssues(issuesRes.issues || [])
 
-      if (isAdmin) {
+      if (userRole === 'staff') {
         try {
           const codeRes = await api.organizations.getJoinCode(orgId)
           setActiveJoinCode(codeRes.join_code)
@@ -72,26 +72,7 @@ export const OrgDashboardPage: React.FC = () => {
 
   useEffect(() => {
     loadOrgData()
-  }, [orgId, isAdmin])
-
-  // Revoke Join Code
-  const handleRevokeJoinCode = async () => {
-    if (!orgId) return
-    if (!window.confirm('Are you sure you want to revoke the active join code? Any pending attempts will fail.')) {
-      return
-    }
-    try {
-      setActionInProgress('code')
-      setError(null)
-      await api.organizations.revokeJoinCode(orgId)
-      setActiveJoinCode(null)
-      setSuccessMsg('Join code revoked successfully.')
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to revoke join code.')
-    } finally {
-      setActionInProgress(null)
-    }
-  }
+  }, [orgId, isAdmin, userRole])
 
   // Copy Code to Clipboard
   const handleCopyCode = (code: string) => {
@@ -427,19 +408,9 @@ export const OrgDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-              {activeJoinCode && (
-                <button
-                  onClick={handleRevokeJoinCode}
-                  className="btn btn-secondary btn-sm"
-                  disabled={actionInProgress === 'code'}
-                  style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-                  title="Revoke join code"
-                >
-                  <Trash2 size={13} /> Revoke
-                </button>
-              )}
-            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '1.5rem' }}>
+              The invitation code is provisioned automatically when platform administration approves this organization.
+            </p>
           </div>
 
           {/* Pending Membership Requests Card */}
@@ -502,7 +473,7 @@ export const OrgDashboardPage: React.FC = () => {
                       >
                         + Client
                       </button>
-                      <button
+                      {userRole !== 'staff' && <button
                         onClick={() => handleApproveRequest(req.id, 'staff')}
                         className="btn btn-secondary btn-sm"
                         style={{ fontSize: '0.72rem', padding: '0.25rem 0.5rem', color: '#818cf8' }}
@@ -510,7 +481,7 @@ export const OrgDashboardPage: React.FC = () => {
                         title="Approve as Staff member"
                       >
                         + Staff
-                      </button>
+                      </button>}
                       <button
                         onClick={() => handleRejectRequest(req.id)}
                         className="btn btn-secondary btn-sm"

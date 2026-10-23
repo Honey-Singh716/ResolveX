@@ -252,18 +252,6 @@ class ApiClient {
       })
     },
 
-    generateJoinCode: (orgId: string): Promise<JoinCodeResponse> => {
-      return this.request<JoinCodeResponse>(`/organizations/${orgId}/join-code`, {
-        method: 'POST',
-      })
-    },
-
-    revokeJoinCode: (orgId: string): Promise<void> => {
-      return this.request<void>(`/organizations/${orgId}/join-code`, {
-        method: 'DELETE',
-      })
-    },
-
     requestOwnershipTransfer: (orgId: string, targetUserId: string): Promise<Organization> => {
       return this.request<Organization>(`/organizations/${orgId}/ownership-transfer`, {
         method: 'POST',
