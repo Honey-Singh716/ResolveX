@@ -31,7 +31,8 @@ import type {
   PlatformStatsResponse,
 } from '../types/organization'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').trim().replace(/\/+$/, '')
+const API_BASE_URL = rawBaseUrl.endsWith('/api/v1') ? rawBaseUrl : `${rawBaseUrl}/api/v1`
 const TOKEN_KEY = 'resolvex_token'
 
 export class ApiError extends Error {
