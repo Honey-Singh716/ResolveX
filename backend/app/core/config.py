@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     platform_admin_email: str | None = None
     platform_admin_password: str | None = None
     platform_admin_allowed_domain: str | None = None
+    # Comma-separated list of allowed frontend origins for CORS.
+    # e.g. https://resolvex.up.railway.app,https://www.resolvex.app
+    allowed_origins: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -1,11 +1,13 @@
-# Dependencies and virtual environments
-backend/.venv/
-venv/
-.venv/
-frontend/node_modules/
-node_modules/
+# ============================================================
+# ResolveX — .gitignore
+# ============================================================
 
-# Python generated files
+# ── Python virtual environments ───────────────────────────
+backend/.venv/
+.venv/
+venv/
+
+# ── Python generated files ────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -17,7 +19,9 @@ __pycache__/
 .coverage.*
 htmlcov/
 
-# Frontend build and tool caches
+# ── Frontend dependencies & build output ──────────────────
+frontend/node_modules/
+node_modules/
 frontend/dist/
 dist/
 coverage/
@@ -27,20 +31,27 @@ frontend/.vite/
 frontend/.vitest/
 *.tsbuildinfo
 
-# Local databases and runtime files
+# ── Local databases & runtime files ──────────────────────
 *.sqlite
 *.sqlite3
 *.db
 *.log
 logs/
 
-# Environment files and secrets
+# ── Environment files & secrets ──────────────────────────
+# NEVER commit real .env files — they contain passwords and keys.
 .env
 .env.*
+backend/.env
+frontend/.env
+
+# Allow example/template env files (safe to commit — no real secrets)
 !.env.example
 !.env.*.example
+!backend/.env.example
+!frontend/.env.example
 
-# Operating system and editor files
+# ── OS & editor files ─────────────────────────────────────
 .DS_Store
 Thumbs.db
 .idea/
@@ -50,6 +61,6 @@ Thumbs.db
 *.suo
 *.user
 
-# Temporary files
+# ── Temporary files ───────────────────────────────────────
 *.tmp
 *.temp

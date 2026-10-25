@@ -1,0 +1,62 @@
+version: "3.9"
+
+# ============================================================
+# ResolveX — Local Full-Stack Development with Docker Compose
+# Usage: docker compose up --build
+# ============================================================
+
+services:
+  # ── PostgreSQL (local dev only) ──────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: resolvex
+      POSTGRES_PASSWORD: resolvex_local
+      POSTGRES_DB: resolvex
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resolvex"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── FastAPI Backend ──────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://resolvex:resolvex_local@db/resolvex
+      JWT_SECRET_KEY: local-dev-secret-change-in-production
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      PLATFORM_ADMIN_EMAIL: admin@resolvex.internal
+      PLATFORM_ADMIN_PASSWORD: AdminSecurePass2026!
+      PLATFORM_ADMIN_ALLOWED_DOMAIN: resolvex.internal
+      ALLOWED_ORIGINS: "http://localhost:3000"
+      ENVIRONMENT: development
+    ports:
+      - "8000:8000"
+
+  # ── React/Vite Frontend ──────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:

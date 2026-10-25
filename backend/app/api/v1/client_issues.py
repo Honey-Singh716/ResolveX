@@ -2,7 +2,7 @@
 Client-scoped issue endpoints.
 Allows authenticated clients to list their own reported tickets across all organizations.
 """
-from __future__ import annotations
+from __future__ import annotations  
 
 import uuid
 from fastapi import APIRouter, Depends, Query
