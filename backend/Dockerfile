@@ -1,5 +1,5 @@
 # ============================================================
-# ResolveX Backend — Railway Dockerfile
+# ResolveX Backend — Production Dockerfile
 # ============================================================
 FROM python:3.13-slim
 
@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application source
 COPY . .
 
-# Expose the port Railway will inject via $PORT
+# Expose default port (Render / platforms inject $PORT dynamically)
 EXPOSE 8000
 
 # Start: run migrations then launch Uvicorn

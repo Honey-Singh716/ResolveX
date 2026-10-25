@@ -5,7 +5,7 @@ Allows authenticated clients to list their own reported tickets across all organ
 from __future__ import annotations  
 
 import uuid
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 

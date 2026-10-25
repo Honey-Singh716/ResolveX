@@ -4,9 +4,9 @@
 
 - **Frontend**: React 19 + TypeScript + Vite + React Router v7
 - **Backend**: Python 3.12 + FastAPI + SQLAlchemy 2 + Alembic
-- **Database**: PostgreSQL (hosted on Neon / Railway / Supabase)
+- **Database**: PostgreSQL (hosted on Neon / Supabase)
 - **Auth**: JWT (HS256) + Argon2 password hashing
-- **Deployment**: Docker + Railway.app
+- **Deployment**: Render (Backend) + Vercel (Frontend)
 
 ---
 
@@ -48,15 +48,16 @@ npm run dev                   # runs on http://localhost:3000
 
 ---
 
-##  Deployment — Railway.app
+##  Deployment — Render + Vercel
 
 See [`DEPLOY.md`](./DEPLOY.md) for the full step-by-step guide.
 
 **TL;DR:**
 1. Push this repo to GitHub
-2. Create two Railway services: one pointing to `/backend`, one to `/frontend`
-3. Set the required environment variables (see `backend/.env.example`)
-4. Deploy!
+2. Deploy backend on **Render** (via `render.yaml` Blueprint or Web Service targeting `/backend`)
+3. Deploy frontend on **Vercel** (pointing to `/frontend` root directory with `VITE_API_BASE_URL`)
+4. Set `ALLOWED_ORIGINS` on Render with your Vercel URL
+5. Done!
 
 ---
 
@@ -74,7 +75,7 @@ ResolveX/
 │   │   └── scripts/         # Admin bootstrap
 │   ├── migrations/          # Alembic migration history
 │   ├── Dockerfile
-│   ├── railway.toml
+│   ├── Procfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
@@ -85,7 +86,8 @@ ResolveX/
 │   │   └── types/           # TypeScript type definitions
 │   ├── Dockerfile
 │   ├── nginx.conf
-│   └── railway.toml
+│   └── vercel.json
+├── render.yaml              # Render blueprint config
 ├── docker-compose.yml
 └── DEPLOY.md
 ```

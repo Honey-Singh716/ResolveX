@@ -26,7 +26,7 @@ app = FastAPI(
 )
 
 # In production, set ALLOWED_ORIGINS as a comma-separated list of frontend URLs.
-# e.g. ALLOWED_ORIGINS=https://resolvex.up.railway.app
+# e.g. ALLOWED_ORIGINS=https://resolvex.vercel.app
 # Falls back to localhost origins for local development.
 _raw_origins = settings.allowed_origins or ""
 _production_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]

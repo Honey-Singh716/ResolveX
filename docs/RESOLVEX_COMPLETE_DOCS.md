@@ -95,10 +95,10 @@ Platform (ResolveX itself)
 | Component | Technology |
 |---|---|
 | Containerization | Docker (multi-stage builds) |
-| Hosting | Railway.app (both backend and frontend) |
+| Hosting | Render (backend API) + Vercel (frontend SPA) |
 | Database | Neon (serverless PostgreSQL) |
-| Frontend Server | nginx 1.27-alpine |
-| CI/CD | Git push triggers Railway auto-deploy |
+| Frontend Server | Vercel Edge Network / CDN |
+| CI/CD | Git push triggers automatic deployment |
 
 ---
 
@@ -107,11 +107,11 @@ Platform (ResolveX itself)
 ## 3.1 High-Level Architecture
 
 ```
-[Browser — React SPA — nginx on Railway]
+[Browser — React SPA — Vercel Edge CDN]
          |
          | HTTPS, calls /api/v1/*
          v
-[Backend — FastAPI + Uvicorn — Railway]
+[Backend — FastAPI + Uvicorn — Render]
     API Routes → Pydantic Schemas → Business Logic Services
          |
          | psycopg3 over SSL
@@ -503,7 +503,7 @@ Features of the API client:
 ## Dev vs Production URL
 
 Development: VITE_API_BASE_URL defaults to /api/v1 (Vite proxies /api → localhost:8000)
-Production: VITE_API_BASE_URL=https://backend.railway.app/api/v1 (baked into bundle at build time)
+Production: VITE_API_BASE_URL=https://<your-backend>.onrender.com/api/v1 (baked into bundle at build time on Vercel)
 
 ---
 
@@ -514,9 +514,9 @@ Production: VITE_API_BASE_URL=https://backend.railway.app/api/v1 (baked into bun
 | What | Development | Production | How to Change |
 |---|---|---|---|
 | Database | SQLite test.db | PostgreSQL on Neon | Set DATABASE_URL env var |
-| CORS Origins | localhost:3000, 5173 | Railway frontend URL | Set ALLOWED_ORIGINS env var |
+| CORS Origins | localhost:3000, 5173 | Vercel frontend URL | Set ALLOWED_ORIGINS env var |
 | JWT Secret | Any string | 48+ char random secret | Set JWT_SECRET_KEY env var |
-| ASGI Server | uvicorn --reload | uvicorn (no reload) | Dockerfile CMD already correct |
+| ASGI Server | uvicorn --reload | uvicorn (no reload) | Dockerfile / Render start command |
 | Environment flag | development | production | Set ENVIRONMENT=production |
 | API Docs | /docs enabled by default | Consider disabling | Pass docs_url=None to FastAPI() |
 | Admin bootstrap | Runs every startup | Idempotent — runs safely every time | No change needed |
@@ -525,9 +525,9 @@ Production: VITE_API_BASE_URL=https://backend.railway.app/api/v1 (baked into bun
 
 | What | Development | Production | How to Change |
 |---|---|---|---|
-| API URL | /api/v1 (Vite proxy) | Full backend URL | Set VITE_API_BASE_URL before build |
-| Server | Vite dev server (HMR) | nginx serving dist/ | npm run build + Docker |
-| Port | 3000 | Dynamic $PORT from Railway | nginx.conf + envsubst in Dockerfile |
+| API URL | /api/v1 (Vite proxy) | Full backend URL | Set VITE_API_BASE_URL before build in Vercel |
+| Server | Vite dev server (HMR) | Vercel Edge CDN (dist/) | vercel.json + Vercel deploy |
+| Port | 3000 | HTTPS (443) Edge CDN | Handled automatically by Vercel |
 
 ## Environment Variables — Backend (.env)
 
@@ -548,34 +548,37 @@ Production: VITE_API_BASE_URL=https://backend.railway.app/api/v1 (baked into bun
 |---|---|---|
 | VITE_API_BASE_URL | YES in prod | Full URL to backend API root |
 
-## Railway Deployment — Step by Step
+## Render + Vercel Deployment — Step by Step
 
 Step 1: Push code to GitHub
   git add . && git commit -m "feat: deployment configuration" && git push origin main
 
-Step 2: Create Backend service on Railway
-  - New Project → Deploy from GitHub
+Step 2: Create Backend Web Service on Render
+  - New + → Web Service (or Blueprint with render.yaml) → Deploy from GitHub
   - Root Directory: backend
-  - Railway auto-detects the Dockerfile
-  - Set all required environment variables in Settings → Variables
+  - Runtime: Python 3
+  - Build Command: pip install -r requirements.txt
+  - Start Command: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+  - Set all required environment variables in Environment
   - Health check path: /api/v1/health
 
-Step 3: Deploy backend and verify it is green
-  - Visit https://your-backend.up.railway.app/api/v1/health
+Step 3: Deploy backend and verify it is healthy
+  - Visit https://<your-backend>.onrender.com/api/v1/health
   - Should return: {"status": "healthy", "service": "ResolveX API", "version": "0.1.0"}
 
-Step 4: Create Frontend service on Railway
-  - New Service in same project → Same GitHub repo
+Step 4: Create Frontend Project on Vercel
+  - Add New Project → Import GitHub repo
   - Root Directory: frontend
-  - Set VITE_API_BASE_URL = https://your-backend.up.railway.app/api/v1
+  - Framework Preset: Vite
+  - Set VITE_API_BASE_URL = https://<your-backend>.onrender.com/api/v1
 
 Step 5: Deploy frontend and note its URL
-  - https://your-frontend.up.railway.app
+  - https://<your-project>.vercel.app
 
 Step 6: Update backend ALLOWED_ORIGINS
-  - Go to backend service Variables
-  - Set ALLOWED_ORIGINS = https://your-frontend.up.railway.app
-  - Redeploy backend
+  - Go to Render backend service → Environment
+  - Set ALLOWED_ORIGINS = https://<your-project>.vercel.app
+  - Render auto-redeploys backend
 
 Step 7: Full test
   - /api/v1/health (backend)
@@ -679,7 +682,7 @@ The API client fires a custom browser event called resolvex:unauthorized wheneve
 
 Q: How do you run database migrations automatically on deployment?
 
-The backend Dockerfile CMD is: alembic upgrade head && uvicorn app.main:app. Before Uvicorn starts accepting traffic, Alembic runs all pending migrations. Railway's health check waits for /api/v1/health to return 200 before routing any user traffic to the service, so migrations always finish completely before the first real request is processed.
+The backend start command / Dockerfile CMD is: alembic upgrade head && uvicorn app.main:app. Before Uvicorn starts accepting traffic, Alembic runs all pending migrations. The health check waits for /api/v1/health to return 200 before routing live traffic to the service, so migrations always finish completely before the first real request is processed.
 
 ---
 
@@ -752,9 +755,9 @@ User has many Notifications
 ## API Roots
 Dev Backend:   http://localhost:8000/api/v1
 Dev Frontend:  http://localhost:3000
-Prod Backend:  https://your-backend.up.railway.app/api/v1
-API Docs:      https://your-backend.up.railway.app/docs
-Health Check:  https://your-backend.up.railway.app/api/v1/health
+Prod Backend:  https://<your-backend>.onrender.com/api/v1
+API Docs:      https://<your-backend>.onrender.com/docs
+Health Check:  https://<your-backend>.onrender.com/api/v1/health
 
 ## Useful Commands
 
