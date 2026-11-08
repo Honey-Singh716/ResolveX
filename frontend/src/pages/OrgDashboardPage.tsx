@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import {
   AlertTriangle,
   ArrowRight,
-  Building2,
   CalendarCheck,
   CalendarX2,
   CheckCircle2,
@@ -12,7 +11,6 @@ import {
   Key,
   Layers,
   RefreshCw,
-  Trash2,
   UserCheck,
   UserPlus,
   UserX,
@@ -95,7 +93,6 @@ export const OrgDashboardPage: React.FC = () => {
   const [issues, setIssues] = useState<IssueResponse[]>([])
   const [membershipRequests, setMembershipRequests] = useState<MembershipRequest[]>([])
   const [activeJoinCode, setActiveJoinCode] = useState<string | null>(null)
-  const [joinCodeCreatedAt, setJoinCodeCreatedAt] = useState<string | null>(null)
   const [copiedCode, setCopiedCode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -115,7 +112,6 @@ export const OrgDashboardPage: React.FC = () => {
         try {
           const codeRes = await api.organizations.getJoinCode(orgId)
           setActiveJoinCode(codeRes.join_code)
-          setJoinCodeCreatedAt(codeRes.created_at ? String(codeRes.created_at) : null)
         } catch { setActiveJoinCode(null) }
         try {
           const reqsRes = await api.organizations.listMembershipRequests(orgId)

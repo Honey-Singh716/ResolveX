@@ -67,49 +67,6 @@ const RSTATUS: Record<string, { bg: string; color: string; border: string }> = {
 }
 
 // ---------------------------------------------------------------------------
-// Building SVG illustration — architectural line-art style, warm tones
-// ---------------------------------------------------------------------------
-function BuildingSVG() {
-  return (
-    <svg viewBox="0 0 110 96" xmlns="http://www.w3.org/2000/svg" style={{ width: 110, height: 96 }} aria-hidden="true">
-      {/* Ground */}
-      <rect x="0" y="80" width="110" height="16" fill="#F0E4D4" rx="2" />
-      {/* Main building body */}
-      <rect x="12" y="34" width="58" height="48" fill="#FFFDF9" stroke="#D4B896" strokeWidth="1.2" rx="2" />
-      {/* Roof / pediment */}
-      <polygon points="10,36 41,14 72,36" fill="#DBBF9E" stroke="#C9A87C" strokeWidth="0.8" />
-      {/* Roof ridge line */}
-      <line x1="10" y1="36" x2="72" y2="36" stroke="#C9A87C" strokeWidth="0.8" />
-      {/* Door */}
-      <rect x="31" y="58" width="20" height="24" fill="#C38B5E" rx="2" stroke="#A06B3C" strokeWidth="0.8" />
-      <circle cx="48" cy="70" r="1.8" fill="#7A4B2A" />
-      {/* Door arch */}
-      <path d="M31,60 Q41,52 51,60" fill="none" stroke="#A06B3C" strokeWidth="0.8" />
-      {/* Windows row 1 */}
-      <rect x="16" y="42" width="13" height="12" fill="#D4EAFF" stroke="#D4B896" strokeWidth="0.8" rx="1" />
-      <rect x="53" y="42" width="13" height="12" fill="#D4EAFF" stroke="#D4B896" strokeWidth="0.8" rx="1" />
-      {/* Window cross bars */}
-      <line x1="22" y1="42" x2="22" y2="54" stroke="#D4B896" strokeWidth="0.6" />
-      <line x1="16" y1="48" x2="29" y2="48" stroke="#D4B896" strokeWidth="0.6" />
-      <line x1="59" y1="42" x2="59" y2="54" stroke="#D4B896" strokeWidth="0.6" />
-      <line x1="53" y1="48" x2="66" y2="48" stroke="#D4B896" strokeWidth="0.6" />
-      {/* Side wing */}
-      <rect x="70" y="52" width="28" height="30" fill="#FBF5EE" stroke="#D4B896" strokeWidth="1" rx="2" />
-      <rect x="74" y="58" width="9" height="9" fill="#D4EAFF" stroke="#D4B896" strokeWidth="0.7" rx="1" />
-      <rect x="85" y="58" width="9" height="9" fill="#D4EAFF" stroke="#D4B896" strokeWidth="0.7" rx="1" />
-      {/* Path to door */}
-      <rect x="37" y="80" width="8" height="16" fill="#DEC4A6" />
-      {/* Small decorative steps */}
-      <rect x="27" y="80" width="28" height="3" fill="#D4B896" rx="1" />
-      <rect x="29" y="77" width="24" height="3" fill="#DBBF9E" rx="1" />
-      {/* Flagpole */}
-      <line x1="41" y1="6" x2="41" y2="14" stroke="#C9A87C" strokeWidth="1" />
-      <polygon points="41,6 50,9 41,12" fill="#C38B5E" opacity="0.7" />
-    </svg>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Modal wrapper — warm cream style
 // ---------------------------------------------------------------------------
 function WarmModal({ title, subtitle, onClose, children }: {

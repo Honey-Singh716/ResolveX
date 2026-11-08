@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
   AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -17,7 +15,6 @@ import {
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ErrorAlert } from '../components/ErrorAlert'
-import { LoadingSpinner } from '../components/LoadingSpinner'
 import { useOrg } from '../context/OrgContext'
 import { api } from '../services/api'
 import type { Issue, IssueFilterParams } from '../types/issue'
@@ -240,10 +237,6 @@ export const IssueDashboardPage: React.FC = () => {
     padding: '0.45rem 0.75rem', background: T.surface, border: `1.5px solid ${T.border}`,
     borderRadius: 9, color: T.espresso, fontSize: '0.83rem', cursor: 'pointer',
     fontFamily: 'inherit', outline: 'none',
-  }
-
-  const sortLabel: Record<string, string> = {
-    created_at: 'Date Created (Newest)', updated_at: 'Date Updated', priority: 'Priority', status: 'Status', issue_key: 'Issue Key',
   }
 
   return (

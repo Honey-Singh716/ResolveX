@@ -4,16 +4,14 @@
  * Warm ivory/beige/brown brand identity (institutional governance theme).
  * Three tabs: System Overview & Metrics | Verification Queue | Platform Admins
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Activity,
   AlertTriangle,
   BarChart3,
   Building2,
   CheckCircle2,
-  ChevronDown,
   Clock,
-  FileText,
   RefreshCw,
   ShieldCheck,
   Slash,
@@ -496,7 +494,6 @@ export const PlatformAdminPage: React.FC = () => {
   // ── Stats ──────────────────────────────────────────────────────────────────
   const [stats, setStats] = useState<PlatformStatsResponse | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
-  const [statsError, setStatsError] = useState<string | null>(null)
 
   // ── Growth chart ───────────────────────────────────────────────────────────
   const [growthData, setGrowthData] = useState<OrgGrowthDataPoint[]>([])
@@ -542,12 +539,11 @@ export const PlatformAdminPage: React.FC = () => {
   // ── Load functions ────────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
     setStatsLoading(true)
-    setStatsError(null)
     try {
       const data = await api.platform.getStats()
       setStats(data)
     } catch (e) {
-      setStatsError(e instanceof Error ? e.message : 'Failed to load statistics.')
+      setErrorMsg(e instanceof Error ? e.message : 'Failed to load statistics.')
     } finally {
       setStatsLoading(false)
     }

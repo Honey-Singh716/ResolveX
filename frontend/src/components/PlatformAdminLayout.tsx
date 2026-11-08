@@ -1,23 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Activity,
+  AlertTriangle,
   BarChart3,
-  Bell,
   Briefcase,
   Building2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  FileText,
   LayoutDashboard,
   LogOut,
   Menu,
   Settings,
   ShieldCheck,
-  Users,
   User as UserIcon,
-  AlertTriangle,
-  X,
+  Users,
 } from 'lucide-react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'

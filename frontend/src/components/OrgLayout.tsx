@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
   ArrowUpRight,
-  Bell,
   Building2,
   CalendarX2,
   ChevronDown,

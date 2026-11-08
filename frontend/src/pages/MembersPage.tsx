@@ -104,7 +104,7 @@ const fg: React.CSSProperties  = { marginBottom: '0.9rem' }
 // ---------------------------------------------------------------------------
 export const MembersPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>()
-  const { currentOrg, isAdmin, userRole } = useOrg()
+  const { currentOrg, userRole } = useOrg()
   const { user } = useAuth()
 
   const activeOrgId = orgId || currentOrg?.id
