@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { HomePage } from '../pages/HomePage'
@@ -62,6 +62,7 @@ describe('HomePage', () => {
     )
 
     expect(await screen.findByText(/welcome, honey/i)).toBeInTheDocument()
+    expect(screen.queryByText(/turn issues into/i)).not.toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /join an organization/i }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: /create an organization/i }).length).toBeGreaterThan(0)
     expect(screen.getByText(/no organizations yet/i)).toBeInTheDocument()
@@ -94,6 +95,7 @@ describe('HomePage', () => {
     )
 
     await waitFor(() => expect(screen.getByText(/my issue summary/i)).toBeInTheDocument())
-    expect(screen.getByText('Open')).toBeInTheDocument()
+    const summary = screen.getByRole('heading', { name: /my issue summary/i }).closest('.home-panel')
+    expect(summary).toHaveTextContent('Open')
   })
 })

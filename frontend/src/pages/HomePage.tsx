@@ -80,17 +80,15 @@ export const HomePage: React.FC = () => {
       <ErrorAlert message={error} onDismiss={() => setError(null)} />
 
       <section className="home-hero home-enter">
-        <div className="home-hero-orb home-hero-orb-one" />
-        <div className="home-hero-orb home-hero-orb-two" />
         <div className="home-hero-content">
           <div className="home-eyebrow"><Sparkles size={15} /> Your ResolveX command center</div>
           <h1>Welcome, {user?.full_name?.split(' ')[0] || 'there'}.</h1>
           <p>One place to report issues, track progress and manage service requests.</p>
           <div className="home-hero-actions">
-            <button className="btn btn-primary" onClick={() => navigate('/organizations', { state: { open: 'join' } })}>
+            <button className="home-btn home-btn-primary" onClick={() => navigate('/organizations', { state: { open: 'join' } })}>
               <KeyRound size={16} /> Join an Organization <ArrowRight size={15} />
             </button>
-            <button className="btn btn-secondary" onClick={() => navigate('/organizations', { state: { open: 'create' } })}>
+            <button className="home-btn home-btn-secondary" onClick={() => navigate('/organizations', { state: { open: 'create' } })}>
               <Building2 size={16} /> Create an Organization
             </button>
           </div>
@@ -100,15 +98,8 @@ export const HomePage: React.FC = () => {
             <span><LifeBuoy size={15} /> Get better support</span>
           </div>
         </div>
-        <div className="home-hero-illustration" aria-hidden="true">
-          <div className="home-illustration-window">
-            <div className="home-window-dot" />
-            <div className="home-window-dot" />
-            <div className="home-window-dot" />
-            <div className="home-window-line wide" />
-            <div className="home-window-line" />
-            <div className="home-window-card"><CheckCircle2 size={24} /></div>
-          </div>
+        <div className="home-hero-photo" aria-hidden="true">
+          <img src="/portal/home-workspace.jpg" alt="" />
         </div>
       </section>
 
@@ -147,7 +138,7 @@ export const HomePage: React.FC = () => {
         </button>
       </section>
 
-      <section className="home-column-grid">
+      <section className={`home-column-grid${issues.length > 0 ? '' : ' home-column-single'}`}>
         <div className="home-panel">
           <div className="home-panel-header">
             <div><span className="home-section-kicker">Workspace access</span><h2>My Organizations</h2></div>
@@ -219,12 +210,17 @@ export const HomePage: React.FC = () => {
           )}
         </div>
         <div className="home-panel home-help-panel">
-          <span className="home-section-kicker">Need a hand?</span>
-          <h2>Start with one simple step</h2>
-          <p>{hasStaffWorkspace ? 'You have an approved organization workspace. Use it for team operations while keeping your personal tickets in the Client Portal.' : 'Join an organization with a code, then raise your first issue once your membership is approved.'}</p>
-          <Link to={hasStaffWorkspace ? '/client/dashboard' : '/organizations'} className="btn btn-secondary btn-sm">
-            {hasStaffWorkspace ? 'Open Client Portal' : 'Explore Organizations'} <ArrowRight size={14} />
-          </Link>
+          <div>
+            <span className="home-section-kicker">Need a hand?</span>
+            <h2>Start with one simple step</h2>
+            <p>{hasStaffWorkspace ? 'You have an approved organization workspace. Use it for team operations while keeping your personal tickets in the Client Portal.' : 'Join an organization with a code, then raise your first issue once your membership is approved.'}</p>
+            <Link to={hasStaffWorkspace ? '/client/dashboard' : '/organizations'} className="home-btn home-btn-primary">
+              {hasStaffWorkspace ? 'Open Client Portal' : 'Explore Organizations'} <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="home-help-photo" aria-hidden="true">
+            <img src="/portal/home-plant.jpg" alt="" />
+          </div>
         </div>
       </section>
     </div>

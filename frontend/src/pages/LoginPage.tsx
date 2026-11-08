@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { ArrowRight, Lock, Mail } from 'lucide-react'
+import { ArrowRight, Mail } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { AuthShell, PasswordField } from '../components/auth/AuthShell'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { useAuth } from '../context/AuthContext'
 
@@ -41,41 +42,13 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1.5rem',
-        background: 'radial-gradient(ellipse at 50% -20%, rgba(99, 102, 241, 0.18), transparent 70%), var(--bg-app)',
-      }}
+    <AuthShell
+      headline="Your work deserves a clearer way forward."
+      message="Access your organization workspace, raise service requests and stay informed as issues move towards resolution."
     >
-      <div className="modal-card" style={{ maxWidth: '440px', padding: '2.5rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 800,
-              fontSize: '1.5rem',
-              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
-              marginBottom: '1rem',
-            }}
-          >
-            R
-          </div>
-          <h1>Welcome back</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.4rem' }}>
-            Sign in to your ResolveX organization workspace
-          </p>
-        </div>
+      <div className="rx-auth-card">
+        <h1>Welcome back</h1>
+        <p>Sign in to your ResolveX workspace.</p>
 
         <ErrorAlert message={error} onDismiss={() => setError(null)} />
 
@@ -84,108 +57,44 @@ export const LoginPage: React.FC = () => {
             <label className="form-label" htmlFor="email">
               Work Email
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className="rx-field-control">
+              <Mail className="rx-field-icon" size={16} aria-hidden="true" />
               <input
                 id="email"
                 type="email"
                 className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
                 placeholder="name@organization.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
                 required
               />
-              <Mail
-                size={17}
-                style={{
-                  position: 'absolute',
-                  left: '0.85rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
-              />
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="password"
-                type="password"
-                className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
-                placeholder="••••••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-              <Lock
-                size={17}
-                style={{
-                  position: 'absolute',
-                  left: '0.85rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
-              />
-            </div>
-          </div>
+          <PasswordField
+            id="password"
+            label="Password"
+            value={password}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            onChange={setPassword}
+          />
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem' }}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Signing in...' : 'Sign In'} <ArrowRight size={16} />
+          <button className="rx-auth-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
+            {!isSubmitting && <ArrowRight size={16} aria-hidden="true" />}
           </button>
         </form>
 
-        <div
-          style={{
-            marginTop: '1.75rem',
-            textAlign: 'center',
-            fontSize: '0.85rem',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          Don't have an account?{' '}
-          <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600 }}>
-            Create one now
-          </Link>
-        </div>
+        <p className="rx-auth-links">
+          Don't have an account? <Link to="/register">Create one</Link>
+        </p>
 
-        <div
-          style={{
-            marginTop: '1.5rem',
-            paddingTop: '1rem',
-            borderTop: '1px solid var(--border-subtle)',
-            textAlign: 'center',
-            fontSize: '0.8rem',
-          }}
-        >
-          <Link
-            to="/platform-admin/login"
-            style={{
-              color: '#a855f7',
-              textDecoration: 'none',
-              fontWeight: 500,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-            }}
-          >
-            Platform Administrator? Sign in to Admin Portal →
-          </Link>
+        <div className="rx-auth-admin">
+          <Link to="/platform-admin/login">Platform administrator sign in</Link>
         </div>
       </div>
-    </div>
+    </AuthShell>
   )
 }

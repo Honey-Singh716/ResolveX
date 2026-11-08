@@ -1,21 +1,37 @@
 import React, { useState, useEffect } from 'react'
 import {
+  ArrowUpRight,
+  Bell,
   Building2,
+  CalendarX2,
   ChevronDown,
-  Layers,
+  Inbox,
   LayoutDashboard,
+  Layers,
   LogOut,
   ShieldCheck,
   User as UserIcon,
+  UserPlus,
   Users,
-  Inbox,
-  Briefcase,
 } from 'lucide-react'
-import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useOrg } from '../context/OrgContext'
 import { NotificationDropdown } from './NotificationDropdown'
-import { RoleBadge } from './StatusBadge'
+
+// ---------------------------------------------------------------------------
+// Sidebar design tokens
+// ---------------------------------------------------------------------------
+const S = {
+  bg:       '#3D1F0F',   // dark warm brown
+  bgHover:  '#522A14',
+  bgActive: '#6B3520',
+  accent:   '#C38B5E',
+  text:     '#F5E8DA',
+  muted:    '#A88060',
+  border:   'rgba(195,139,94,0.2)',
+  logo:     '#E8C09A',
+} as const
 
 export const OrgLayout: React.FC = () => {
   const { user, logout } = useAuth()
@@ -25,341 +41,272 @@ export const OrgLayout: React.FC = () => {
   const navigate = useNavigate()
   const { orgId: routeOrgId } = useParams<{ orgId: string }>()
 
-  // Filter approved organizations where user is staff/manager/admin/owner
   const approvedOrgs = organizations.filter(
     (o) => o.verification_status === 'approved' && ['owner', 'admin', 'manager', 'staff'].includes(o.role)
   )
 
   useEffect(() => {
-    // Direct tenant URLs must update the selected tenant before rendering its shell.
     if (!isLoading && approvedOrgs.length > 0) {
-      const routeOrg = routeOrgId ? approvedOrgs.find((org) => org.id === routeOrgId) : null
+      const routeOrg = routeOrgId ? approvedOrgs.find((o) => o.id === routeOrgId) : null
       if (routeOrg && currentOrg?.id !== routeOrg.id) {
         selectOrg(routeOrg.id)
-      } else if (!routeOrgId && (!currentOrg || currentOrg.verification_status !== 'approved' || !approvedOrgs.some((org) => org.id === currentOrg.id))) {
+      } else if (!routeOrgId && (!currentOrg || !approvedOrgs.some((o) => o.id === currentOrg.id))) {
         selectOrg(approvedOrgs[0].id)
       }
     }
   }, [currentOrg, approvedOrgs, isLoading, routeOrgId, selectOrg])
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
 
-  const handleOrgSwitch = (orgId: string) => {
-    selectOrg(orgId)
-    setOrgDropdownOpen(false)
-    navigate('/organization/dashboard')
-  }
+  const navLinkStyle = (isActive: boolean): React.CSSProperties => ({
+    display: 'flex', alignItems: 'center', gap: '0.65rem',
+    padding: '0.6rem 1rem',
+    borderRadius: 10,
+    fontSize: '0.88rem', fontWeight: 500,
+    color: isActive ? S.text : S.muted,
+    background: isActive ? S.bgActive : 'transparent',
+    textDecoration: 'none',
+    transition: 'background 0.15s, color 0.15s',
+  })
 
   return (
-    <div className="app-shell">
-      <header className="navbar" style={{ borderBottom: '1px solid rgba(99, 102, 241, 0.25)' }}>
-        {/* Brand & Org Switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <Link
-            to="/organization/dashboard"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              fontWeight: 800,
-              fontSize: '1.15rem',
-              color: 'var(--text-main)',
-              textDecoration: 'none',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 800,
-                fontSize: '1.1rem',
-                boxShadow: '0 2px 10px rgba(99, 102, 241, 0.4)',
-              }}
-            >
-              <Briefcase size={17} />
-            </div>
-            <span>
-              ResolveX <span style={{ fontSize: '0.8rem', color: '#818cf8', fontWeight: 600 }}>Staff Workspace</span>
-            </span>
-          </Link>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#FAF6F0' }}>
 
-          {/* Org Selector Dropdown */}
-          {currentOrg && (
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setOrgDropdownOpen((prev) => !prev)}
-                className="btn btn-secondary btn-sm"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  maxWidth: '220px',
-                  fontWeight: 600,
-                  border: '1px solid var(--border-medium)',
-                }}
-              >
-                <Building2 size={15} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                <span
-                  style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {currentOrg.name}
-                </span>
-                <ChevronDown size={14} style={{ opacity: 0.7 }} />
-              </button>
-
-              {orgDropdownOpen && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 6px)',
-                    left: 0,
-                    width: '270px',
-                    background: 'var(--bg-surface)',
-                    border: '1px solid var(--border-medium)',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-lg)',
-                    zIndex: 60,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: '0.6rem 0.8rem',
-                      fontSize: '0.75rem',
-                      color: 'var(--text-muted)',
-                      textTransform: 'uppercase',
-                      fontWeight: 600,
-                      borderBottom: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    Approved Workspaces
-                  </div>
-                  <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                    {approvedOrgs.map((org) => (
-                      <div
-                        key={org.id}
-                        onClick={() => handleOrgSwitch(org.id)}
-                        style={{
-                          padding: '0.65rem 0.85rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          background:
-                            org.id === currentOrg.id ? 'var(--primary-subtle)' : 'transparent',
-                          transition: 'background var(--transition-fast)',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (org.id !== currentOrg.id) {
-                            e.currentTarget.style.background = 'var(--bg-surface-hover)'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (org.id !== currentOrg.id) {
-                            e.currentTarget.style.background = 'transparent'
-                          }
-                        }}
-                      >
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{org.name}</div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                            {org.slug}
-                          </div>
-                        </div>
-                        <RoleBadge role={org.role} />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div
-                    style={{
-                      borderTop: '1px solid var(--border-subtle)',
-                      padding: '0.4rem',
-                    }}
-                  >
-                    <button
-                      onClick={() => {
-                        setOrgDropdownOpen(false)
-                        navigate('/client/dashboard')
-                      }}
-                      className="btn-ghost btn-sm"
-                      style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', color: '#34d399' }}
-                    >
-                      <Inbox size={14} /> Back to Client Portal
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+      {/* ── Sidebar ── */}
+      <aside style={{
+        width: 200,
+        minWidth: 200,
+        background: S.bg,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '1rem 0.75rem',
+        gap: '0.25rem',
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflowY: 'auto',
+      }}>
+        {/* Brand */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.25rem 1rem', borderBottom: `1px solid ${S.border}`, marginBottom: '0.5rem' }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: S.bgActive, display: 'flex', alignItems: 'center', justifyContent: 'center', color: S.logo, flexShrink: 0 }}>
+            <svg viewBox="0 0 16 16" style={{ width: 16, height: 16, fill: 'currentColor' }}>
+              <rect x="1" y="1" width="6" height="6" rx="1.4" />
+              <rect x="9" y="1" width="6" height="6" rx="1.4" opacity="0.55" />
+              <rect x="1" y="9" width="6" height="6" rx="1.4" opacity="0.55" />
+              <rect x="9" y="9" width="6" height="6" rx="1.4" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 750, color: S.text, letterSpacing: '-0.01em' }}>ResolveX</div>
+            <div style={{ fontSize: '0.62rem', color: S.muted, fontWeight: 500 }}>Staff Workspace</div>
+          </div>
         </div>
 
-        {/* Center Nav Links (Desktop) */}
+        {/* Navigation */}
         {currentOrg && (
-          <nav className="navbar-nav" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <NavLink
-              to="/organization/dashboard"
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
+          <>
+            <NavLink to="/organization/dashboard" style={({ isActive }) => navLinkStyle(isActive)}
+              onMouseEnter={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = S.bgHover }}
+              onMouseLeave={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               <LayoutDashboard size={16} /> Org Dashboard
             </NavLink>
-            <NavLink
-              to={`/org/${currentOrg.id}/issues`}
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
+            <NavLink to={`/org/${currentOrg.id}/issues`} style={({ isActive }) => navLinkStyle(isActive)}
+              onMouseEnter={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = S.bgHover }}
+              onMouseLeave={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               <Layers size={16} /> Issues Queue
             </NavLink>
-            <NavLink
-              to={`/org/${currentOrg.id}/members`}
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
+            <NavLink to={`/org/${currentOrg.id}/members`} style={({ isActive }) => navLinkStyle(isActive)}
+              onMouseEnter={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = S.bgHover }}
+              onMouseLeave={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               <Users size={16} /> Team & Join Requests
             </NavLink>
-          </nav>
+
+            <div style={{ height: 1, background: S.border, margin: '0.5rem 0.25rem' }} />
+
+            <NavLink to={`/org/${currentOrg.id}/members`} style={({ isActive }) => navLinkStyle(isActive)}
+              onMouseEnter={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = S.bgHover }}
+              onMouseLeave={(e) => { if (!(e.currentTarget as HTMLElement).className.includes('active')) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+              <UserPlus size={16} /> Team Roster
+            </NavLink>
+
+            {/* Transfer Ownership & Schedule Archival — sidebar shortcuts */}
+            <button
+              onClick={() => navigate(`/organization/dashboard`)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.6rem 1rem', borderRadius: 10, fontSize: '0.88rem', fontWeight: 500, color: S.muted, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', width: '100%', transition: 'background 0.15s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = S.bgHover)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <UserPlus size={16} /> Transfer Ownership
+            </button>
+            <button
+              onClick={() => navigate(`/organization/dashboard`)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.6rem 1rem', borderRadius: 10, fontSize: '0.88rem', fontWeight: 500, color: S.muted, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', width: '100%', transition: 'background 0.15s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = S.bgHover)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <CalendarX2 size={16} /> Schedule Archival
+            </button>
+          </>
         )}
 
-        {/* Right Tools */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {/* Quick Switch to Client Portal */}
-          <button
-            onClick={() => navigate('/client/dashboard')}
-            className="btn btn-secondary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid rgba(16, 185, 129, 0.4)' }}
-            title="Switch back to Client Portal"
-          >
-            <Inbox size={14} style={{ color: '#34d399' }} /> Client Portal
-          </button>
+        {/* Sidebar building illustration at bottom */}
+        <div style={{ marginTop: 'auto', padding: '1rem 0.5rem 0', borderRadius: 12, overflow: 'hidden' }}>
+          <img
+            src="/portal/org-building-sidebar.png"
+            alt=""
+            aria-hidden="true"
+            style={{ width: '100%', display: 'block', borderRadius: 10, opacity: 0.85 }}
+          />
+        </div>
+      </aside>
 
-          <NotificationDropdown />
+      {/* ── Right side: navbar + content ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', minWidth: 0 }}>
 
-          {/* User Menu */}
+        {/* Top navbar */}
+        <header style={{
+          height: 64,
+          background: '#FFFDF9',
+          borderBottom: '1px solid #EAE1D7',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1.5rem',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+        }}>
+          {/* Org switcher */}
           <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setUserDropdownOpen((prev) => !prev)}
-              className="btn-ghost"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.35rem 0.65rem',
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid var(--border-subtle)',
+            {currentOrg && (
+              <button
+                onClick={() => setOrgDropdownOpen((p) => !p)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.35rem 0.85rem',
+                  background: '#F7EEE4', border: '1px solid #EAE1D7',
+                  borderRadius: 99, color: '#38251C',
+                  fontWeight: 600, fontSize: '0.88rem',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  maxWidth: 280,
+                }}
+              >
+                <Building2 size={15} color="#87502C" />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {currentOrg.name}
+                </span>
+                <ChevronDown size={13} color="#87502C" />
+              </button>
+            )}
+
+            {orgDropdownOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 8px)', left: 0,
+                width: 280, background: '#FFFDF9',
+                border: '1px solid #EAE1D7', borderRadius: 14,
+                boxShadow: '0 8px 28px rgba(56,37,28,0.12)',
+                zIndex: 60, overflow: 'hidden',
               }}
-            >
-              <div
-                style={{
-                  width: '26px',
-                  height: '26px',
-                  borderRadius: '50%',
-                  background: 'var(--bg-surface-elevated)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--primary)',
-                }}
+                onMouseLeave={() => setOrgDropdownOpen(false)}
               >
-                <UserIcon size={15} />
-              </div>
-              <span
-                style={{
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  maxWidth: '120px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {user?.full_name}
-              </span>
-              <ChevronDown size={13} style={{ opacity: 0.6 }} />
-            </button>
-
-            {userDropdownOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 6px)',
-                  right: 0,
-                  width: '230px',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-medium)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-lg)',
-                  zIndex: 60,
-                  overflow: 'hidden',
-                  padding: '0.5rem 0',
-                }}
-              >
-                <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{user?.full_name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.email}</div>
-                  {currentOrg && (
-                    <div style={{ marginTop: '0.35rem' }}>
-                      <RoleBadge role={currentOrg.role} />
-                    </div>
-                  )}
+                <div style={{ padding: '0.5rem 0.8rem', fontSize: '0.7rem', color: '#A09080', fontWeight: 700, textTransform: 'uppercase', borderBottom: '1px solid #EAE1D7' }}>
+                  Approved Workspaces
                 </div>
-
-                <button
-                  onClick={() => {
-                    setUserDropdownOpen(false)
-                    navigate('/client/dashboard')
-                  }}
-                  className="btn-ghost btn-sm"
-                  style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem', color: '#34d399' }}
-                >
-                  <Inbox size={15} /> Client Portal
-                </button>
-
-                {user?.is_platform_admin && (
-                  <button
-                    onClick={() => {
-                      setUserDropdownOpen(false)
-                      navigate('/platform-admin/dashboard')
+                {approvedOrgs.map((org) => (
+                  <div key={org.id} onClick={() => { selectOrg(org.id); setOrgDropdownOpen(false); navigate('/organization/dashboard') }}
+                    style={{
+                      padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.6rem',
+                      cursor: 'pointer',
+                      background: org.id === currentOrg?.id ? '#F7EEE4' : 'transparent',
                     }}
-                    className="btn-ghost btn-sm"
-                    style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem', color: '#818cf8' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#F7EEE4')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = org.id === currentOrg?.id ? '#F7EEE4' : 'transparent')}
                   >
-                    <ShieldCheck size={15} /> Platform Admin
-                  </button>
-                )}
-
-                <div style={{ borderTop: '1px solid var(--border-subtle)', margin: '0.25rem 0' }} />
-                <button
-                  onClick={handleLogout}
-                  className="btn-ghost btn-sm"
-                  style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem', color: '#f87171' }}
-                >
-                  <LogOut size={15} /> Sign Out
-                </button>
+                    <Building2 size={14} color="#87502C" />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38251C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org.name}</p>
+                      <p style={{ fontSize: '0.7rem', color: '#A09080' }}>{org.role}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="main-content">
-        <Outlet />
-      </main>
+          {/* Right tools */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            {/* Client Portal switch */}
+            <button
+              onClick={() => navigate('/client/dashboard')}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                padding: '0.38rem 0.85rem',
+                background: '#FFFDF9', border: '1.5px solid #EAE1D7',
+                borderRadius: 99, color: '#38251C',
+                fontWeight: 600, fontSize: '0.82rem',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Client Portal <ArrowUpRight size={13} />
+            </button>
+
+            <NotificationDropdown />
+
+            {/* User dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setUserDropdownOpen((p) => !p)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  padding: '0.28rem 0.55rem 0.28rem 0.28rem',
+                  border: '1px solid #EAE1D7', borderRadius: 99,
+                  background: '#FFFDF9', color: '#38251C',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#F4EBE3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#87502C' }}>
+                  <UserIcon size={14} />
+                </span>
+                <span style={{ fontSize: '0.84rem', fontWeight: 600, maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.full_name}</span>
+                <ChevronDown size={12} color="#87502C" />
+              </button>
+
+              {userDropdownOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                  width: 220, background: '#FFFDF9',
+                  border: '1px solid #EAE1D7', borderRadius: 12,
+                  boxShadow: '0 8px 24px rgba(56,37,28,0.1)',
+                  zIndex: 60, padding: '0.4rem 0',
+                }}>
+                  <div style={{ padding: '0.5rem 0.85rem 0.65rem', borderBottom: '1px solid #EAE1D7' }}>
+                    <p style={{ fontWeight: 600, fontSize: '0.86rem', color: '#38251C' }}>{user?.full_name}</p>
+                    <p style={{ fontSize: '0.74rem', color: '#A09080' }}>{user?.email}</p>
+                  </div>
+                  {[
+                    { label: 'Client Portal', icon: <Inbox size={14} />, action: () => navigate('/client/dashboard'), color: '#38251C' },
+                    ...(user?.is_platform_admin ? [{ label: 'Platform Admin', icon: <ShieldCheck size={14} />, action: () => navigate('/platform-admin/dashboard'), color: '#38251C' }] : []),
+                    { label: 'Sign Out', icon: <LogOut size={14} />, action: handleLogout, color: '#8d3b34' },
+                  ].map((item, i) => (
+                    <button key={i} onClick={() => { setUserDropdownOpen(false); item.action() }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', width: '100%', padding: '0.55rem 0.85rem', background: 'transparent', border: 'none', color: item.color, fontSize: '0.84rem', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#F4EBE3')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      {item.icon} {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main style={{ flex: 1, padding: '1.75rem 1.5rem', background: '#FAF6F0', overflowY: 'auto' }}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

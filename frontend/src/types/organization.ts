@@ -16,6 +16,7 @@ export interface Organization {
   deletion_scheduled_for?: string | null
   ownership_transfer_target_id?: string | null
   archived_at?: string | null
+  verified_at?: string | null
 }
 
 export interface OrganizationDeletionResponse {

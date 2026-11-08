@@ -21,6 +21,7 @@ import { OrganizationsPage } from './pages/OrganizationsPage'
 import { PlatformAdminLoginPage } from './pages/PlatformAdminLoginPage'
 import { PlatformAdminPage } from './pages/PlatformAdminPage'
 import { HomePage } from './pages/HomePage'
+import { LandingPage } from './pages/LandingPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
 
@@ -33,7 +34,7 @@ const RootRedirect: React.FC = () => {
     return <LoadingSpinner fullPage label="Authenticating ResolveX session..." />
   }
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <LandingPage />
   }
   if (user.is_platform_admin) {
     return <Navigate to="/platform-admin/dashboard" replace />

@@ -3,6 +3,8 @@ import {
   ArrowRight,
   Building2,
   CheckCircle2,
+  Clock3,
+  FolderOpen,
   Key,
   Layers,
   Plus,
@@ -11,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
+import './client-dashboard.css'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 import { PriorityBadge, StatusBadge } from '../components/StatusBadge'
@@ -127,65 +130,25 @@ export const ClientDashboardPage: React.FC = () => {
 
   if (approvedOrgs.length === 0) {
     return (
-      <div style={{ maxWidth: '760px', margin: '2rem auto' }}>
-        <div
-          className="card"
-          style={{
-            padding: '3rem 2rem',
-            textAlign: 'center',
-            background:
-              'radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.14), transparent 70%), var(--bg-surface)',
-          }}
-        >
-          <div
-            style={{
-              width: '64px',
-              height: '64px',
-              margin: '0 auto 1.25rem',
-              borderRadius: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#34d399',
-              background: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
-            }}
-          >
-            <Building2 size={30} />
-          </div>
-          <h1 style={{ fontSize: '1.65rem' }}>Choose an organization to get started</h1>
-          <p
-            style={{
-              maxWidth: '560px',
-              margin: '0.75rem auto 1.75rem',
-              color: 'var(--text-secondary)',
-              lineHeight: 1.6,
-            }}
-          >
+      <div className="rx-dash">
+        <div className="rx-dash-gate">
+          <Building2 size={30} aria-hidden="true" />
+          <h1>Choose an organization to get started</h1>
+          <p>
             Join an existing organization with a code, or submit a new organization
             request for platform administrator verification. Your ticket dashboard
             will appear after you join an approved organization.
           </p>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => navigate('/organizations', { state: { open: 'join' } })}
-              className="btn btn-primary"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
+          <div className="rx-dash-actions">
+            <button className="rx-dash-btn rx-dash-btn-primary" onClick={() => navigate('/organizations', { state: { open: 'join' } })}>
               <Key size={16} /> Join Organization by Code
             </button>
-            <button
-              onClick={() => navigate('/organizations', { state: { open: 'create' } })}
-              className="btn btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
+            <button className="rx-dash-btn rx-dash-btn-secondary" onClick={() => navigate('/organizations', { state: { open: 'create' } })}>
               <Building2 size={16} /> Request New Organization
             </button>
           </div>
-
           {organizations.length > 0 && (
-            <p style={{ marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+            <p className="rx-dash-note">
               Your organization request or membership is waiting for approval.
               You can submit another join request or review all organizations.
             </p>
@@ -196,181 +159,89 @@ export const ClientDashboardPage: React.FC = () => {
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Header Banner */}
-      <div
-        style={{
-          background: 'radial-gradient(ellipse at 80% 20%, rgba(16, 185, 129, 0.15), transparent 70%), var(--bg-surface)',
-          border: '1px solid var(--border-medium)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.5rem',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-            <span
-              style={{
-                background: 'rgba(16, 185, 129, 0.15)',
-                color: '#34d399',
-                padding: '0.2rem 0.6rem',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                letterSpacing: '0.03em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Client Portal
-            </span>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>• Authenticated User</span>
-          </div>
-          <h1 style={{ fontSize: '1.85rem', letterSpacing: '-0.02em' }}>Welcome back, {user?.full_name}</h1>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '0.35rem', fontSize: '0.95rem' }}>
-            Track your service requests, raise new tickets, or manage your organization memberships.
-          </p>
-        </div>
-
-        {/* Quick Action Buttons */}
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {approvedOrgs.length > 0 && (
+    <div className="rx-dash">
+      <section className="rx-dash-hero">
+        <div className="rx-dash-hero-copy">
+          <p className="rx-dash-kicker">CLIENT DASHBOARD</p>
+          <h1>Welcome back, {user?.full_name}</h1>
+          <p>Track your service requests, raise new tickets, or manage your organization memberships.</p>
+          <div className="rx-dash-actions">
             <button
+              className="rx-dash-btn rx-dash-btn-primary"
               onClick={() => {
-                if (approvedOrgs.length > 0) {
-                  setTicketOrgId(approvedOrgs[0].id)
-                }
+                setTicketOrgId(approvedOrgs[0].id)
                 setIsRaiseTicketModalOpen(true)
               }}
-              className="btn btn-primary"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#10b981', borderColor: '#059669' }}
             >
               <Plus size={16} /> Raise Ticket
             </button>
-          )}
-
-          <button
-            onClick={() => navigate('/organizations', { state: { open: 'join' } })}
-            className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <Key size={15} style={{ color: '#fbbf24' }} /> Join via Code
-          </button>
-
-          <button
-            onClick={() => navigate('/organizations', { state: { open: 'create' } })}
-            className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <Building2 size={15} style={{ color: '#818cf8' }} /> Request New Org
-          </button>
+            <button className="rx-dash-btn rx-dash-btn-secondary" onClick={() => navigate('/organizations', { state: { open: 'join' } })}>
+              <Key size={15} /> Join via Code
+            </button>
+            <button className="rx-dash-btn rx-dash-btn-secondary" onClick={() => navigate('/organizations', { state: { open: 'create' } })}>
+              <Building2 size={15} /> Request New Org
+            </button>
+          </div>
         </div>
-      </div>
+        <div className="rx-dash-hero-photo" aria-hidden="true">
+          <img src="/portal/dash-hero.png" alt="" />
+        </div>
+      </section>
 
       {/* Alerts */}
       <ErrorAlert message={error} onDismiss={() => setError(null)} />
       {successMsg && (
-        <div
-          style={{
-            background: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(16, 185, 129, 0.35)',
-            color: '#34d399',
-            padding: '0.85rem 1.25rem',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem' }}>
-            <CheckCircle2 size={18} />
-            <span>{successMsg}</span>
-          </div>
-          <button
-            onClick={() => setSuccessMsg(null)}
-            className="btn-ghost btn-sm"
-            style={{ color: '#34d399', padding: '0.2rem 0.5rem' }}
-          >
+        <div className="rx-dash-success">
+          <span><CheckCircle2 size={18} /> {successMsg}</span>
+          <button type="button" className="rx-dash-btn rx-dash-btn-secondary" onClick={() => setSuccessMsg(null)}>
             Dismiss
           </button>
         </div>
       )}
 
-      {/* Metrics Grid */}
-      <div className="stat-cards-grid">
-        <div className="stat-card">
-          <div className="stat-card-label">My Raised Tickets</div>
-          <div className="stat-card-value" style={{ color: 'var(--text-main)' }}>
-            {totalTickets}
-          </div>
+      <section className="rx-dash-stats" aria-label="Ticket summary">
+        <div className="rx-dash-stat rx-dash-stat-beige">
+          <i><Layers size={18} /></i>
+          <span>My Raised Tickets</span>
+          <strong>{totalTickets}</strong>
         </div>
-
-        <div className="stat-card">
-          <div className="stat-card-label">Open / Unresolved</div>
-          <div className="stat-card-value" style={{ color: '#60a5fa' }}>
-            {openCount}
-          </div>
+        <div className="rx-dash-stat rx-dash-stat-blue">
+          <i><FolderOpen size={18} /></i>
+          <span>Open / Unresolved</span>
+          <strong>{openCount}</strong>
         </div>
-
-        <div className="stat-card">
-          <div className="stat-card-label">In Progress</div>
-          <div className="stat-card-value" style={{ color: '#fbbf24' }}>
-            {inProgressCount}
-          </div>
+        <div className="rx-dash-stat rx-dash-stat-amber">
+          <i><Clock3 size={18} /></i>
+          <span>In Progress</span>
+          <strong>{inProgressCount}</strong>
         </div>
-
-        <div className="stat-card">
-          <div className="stat-card-label">Resolved / Closed</div>
-          <div className="stat-card-value" style={{ color: '#34d399' }}>
-            {resolvedCount}
-          </div>
+        <div className="rx-dash-stat rx-dash-stat-green">
+          <i><CheckCircle2 size={18} /></i>
+          <span>Resolved / Closed</span>
+          <strong>{resolvedCount}</strong>
         </div>
-      </div>
+      </section>
 
       {/* Section: My Submitted Tickets */}
-      <div className="card" style={{ padding: '1.75rem' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1.25rem',
-            flexWrap: 'wrap',
-            gap: '1rem',
-          }}
-        >
-          <div>
-            <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Layers size={20} style={{ color: '#10b981' }} /> My Submitted Tickets
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
-              Only you and authorized organization staff can view your reported issues.
-            </p>
-          </div>
-
-          {/* Search & Filter */}
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative' }}>
+      <section className="rx-dash-panel">
+        <svg className="rx-dash-plane" width="92" height="46" viewBox="0 0 92 46" fill="none" aria-hidden="true">
+          <path d="M4 34c18-2 28-16 40-22" stroke="currentColor" strokeWidth="1.4" strokeDasharray="3 4" />
+          <path d="M48 8l28 6-18 8 4 10-8-8-6 4 0-20z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        </svg>
+        <div className="rx-dash-head">
+          <h2><Layers size={18} /> My Submitted Tickets</h2>
+          <p>Only you and authorized organization staff can view your reported issues.</p>
+        </div>
+        <div className="rx-dash-toolbar">
+            <div className="rx-dash-search">
+              <Search size={14} aria-hidden="true" />
               <input
                 type="text"
                 placeholder="Search my tickets..."
                 className="form-input"
-                style={{ paddingLeft: '2.2rem', paddingRight: '0.75rem', fontSize: '0.85rem', width: '200px' }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search
-                size={14}
-                style={{
-                  position: 'absolute',
-                  left: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
+                aria-label="Search my tickets"
               />
             </div>
 
@@ -402,14 +273,14 @@ export const ClientDashboardPage: React.FC = () => {
               ))}
             </select>
 
-            <button onClick={loadData} className="btn btn-secondary btn-sm" title="Refresh Tickets">
+            <button type="button" onClick={loadData} className="rx-dash-btn rx-dash-btn-secondary rx-dash-refresh" title="Refresh Tickets" aria-label="Refresh tickets">
               <RefreshCw size={14} />
             </button>
-          </div>
         </div>
 
         {/* Tickets Table or Empty State */}
         {filteredTickets.length === 0 ? (
+          <div className="rx-dash-empty">
           <EmptyState
             title="No tickets found"
             description={
@@ -426,16 +297,17 @@ export const ClientDashboardPage: React.FC = () => {
                     setTicketOrgId(approvedOrgs[0].id)
                     setIsRaiseTicketModalOpen(true)
                   }}
-                  className="btn btn-primary btn-sm"
+                  className="rx-dash-btn rx-dash-btn-primary"
                 >
                   <Plus size={14} /> Raise Ticket
                 </button>
               ) : undefined
             }
           />
+          </div>
         ) : (
-          <div className="table-responsive">
-            <table className="table">
+          <div className="rx-dash-table-wrap">
+            <table className="rx-dash-table">
               <thead>
                 <tr>
                   <th>Ticket</th>
@@ -450,45 +322,17 @@ export const ClientDashboardPage: React.FC = () => {
                 {filteredTickets.map((t) => (
                   <tr key={t.id}>
                     <td>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-main)' }}>{t.title}</div>
-                      {t.description && (
-                        <div
-                          style={{
-                            fontSize: '0.78rem',
-                            color: 'var(--text-muted)',
-                            maxWidth: '320px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            marginTop: '0.15rem',
-                          }}
-                        >
-                          {t.description}
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>
-                        {organizations.find((o) => o.id === t.organization_id)?.name || 'Organization'}
+                      <div className="rx-dash-title">
+                        {t.title}
+                        {t.description && <small>{t.description}</small>}
                       </div>
                     </td>
+                    <td>{organizations.find((o) => o.id === t.organization_id)?.name || 'Organization'}</td>
+                    <td><StatusBadge status={t.status} /></td>
+                    <td><PriorityBadge priority={t.priority} /></td>
+                    <td>{new Date(t.created_at).toLocaleDateString()}</td>
                     <td>
-                      <StatusBadge status={t.status} />
-                    </td>
-                    <td>
-                      <PriorityBadge priority={t.priority} />
-                    </td>
-                    <td>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        {new Date(t.created_at).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td>
-                      <Link
-                        to={`/client/tickets/${t.id}`}
-                        className="btn btn-secondary btn-sm"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem' }}
-                      >
+                      <Link to={`/client/tickets/${t.id}`} className="rx-dash-btn rx-dash-btn-secondary">
                         View Details <ArrowRight size={13} />
                       </Link>
                     </td>
@@ -498,14 +342,14 @@ export const ClientDashboardPage: React.FC = () => {
             </table>
           </div>
         )}
-      </div>
+      </section>
 
       {/* MODAL: Raise Ticket */}
       {isRaiseTicketModalOpen && (
         <div className="modal-backdrop">
           <div className="modal-card" style={{ maxWidth: '520px' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Raise a New Ticket</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.85rem', marginBottom: '1.25rem' }}>
               Submit a support or service issue directly to your organization team.
             </p>
 
@@ -596,15 +440,14 @@ export const ClientDashboardPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsRaiseTicketModalOpen(false)}
-                  className="btn btn-secondary"
+                  className="rx-dash-btn rx-dash-btn-secondary"
                   disabled={isSubmittingTicket}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
-                  style={{ background: '#10b981', borderColor: '#059669' }}
+                  className="rx-dash-btn rx-dash-btn-primary"
                   disabled={isSubmittingTicket}
                 >
                   {isSubmittingTicket ? 'Submitting...' : 'Submit Ticket'}

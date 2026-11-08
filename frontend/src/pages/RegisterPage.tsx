@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { ArrowRight, Lock, Mail, User } from 'lucide-react'
+import { ArrowRight, Mail, User } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AuthShell, PasswordField } from '../components/auth/AuthShell'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { useAuth } from '../context/AuthContext'
 
@@ -55,41 +56,13 @@ export const RegisterPage: React.FC = () => {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1.5rem',
-        background: 'radial-gradient(ellipse at 50% -20%, rgba(99, 102, 241, 0.18), transparent 70%), var(--bg-app)',
-      }}
+    <AuthShell
+      headline="A better way to manage service requests."
+      message="Create an account, join an organization with an invite code, and raise tickets your team can assign and resolve."
     >
-      <div className="modal-card" style={{ maxWidth: '460px', padding: '2.5rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 800,
-              fontSize: '1.5rem',
-              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
-              marginBottom: '1rem',
-            }}
-          >
-            R
-          </div>
-          <h1>Create your account</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.4rem' }}>
-            Get started with ResolveX issue and service workflows
-          </p>
-        </div>
+      <div className="rx-auth-card">
+        <h1>Create your account</h1>
+        <p>Join an organization and start raising tickets.</p>
 
         <ErrorAlert message={error} onDismiss={() => setError(null)} />
 
@@ -98,26 +71,17 @@ export const RegisterPage: React.FC = () => {
             <label className="form-label" htmlFor="fullName">
               Full Name
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className="rx-field-control">
+              <User className="rx-field-icon" size={16} aria-hidden="true" />
               <input
                 id="fullName"
                 type="text"
                 className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
                 placeholder="Jane Doe"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(event) => setFullName(event.target.value)}
+                autoComplete="name"
                 required
-              />
-              <User
-                size={17}
-                style={{
-                  position: 'absolute',
-                  left: '0.85rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
               />
             </div>
           </div>
@@ -126,110 +90,49 @@ export const RegisterPage: React.FC = () => {
             <label className="form-label" htmlFor="email">
               Work Email
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className="rx-field-control">
+              <Mail className="rx-field-icon" size={16} aria-hidden="true" />
               <input
                 id="email"
                 type="email"
                 className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
                 placeholder="jane@organization.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
                 required
-              />
-              <Mail
-                size={17}
-                style={{
-                  position: 'absolute',
-                  left: '0.85rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="password"
-                type="password"
-                className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
-                placeholder="At least 8 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <Lock
-                size={17}
-                style={{
-                  position: 'absolute',
-                  left: '0.85rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
-              />
-            </div>
-          </div>
+          <PasswordField
+            id="password"
+            label="Password"
+            value={password}
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+            onChange={setPassword}
+          />
 
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label className="form-label" htmlFor="confirmPassword">
-              Confirm Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="confirmPassword"
-                type="password"
-                className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
-                placeholder="Re-type your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-              <Lock
-                size={17}
-                style={{
-                  position: 'absolute',
-                  left: '0.85rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
-              />
-            </div>
-          </div>
+          <PasswordField
+            id="confirmPassword"
+            label="Confirm Password"
+            value={confirmPassword}
+            placeholder="Re-type your password"
+            autoComplete="new-password"
+            onChange={setConfirmPassword}
+          />
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem' }}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Creating account...' : 'Create Account'} <ArrowRight size={16} />
+          <button className="rx-auth-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating account...' : 'Create Account'}
+            {!isSubmitting && <ArrowRight size={16} aria-hidden="true" />}
           </button>
         </form>
 
-        <div
-          style={{
-            marginTop: '2rem',
-            textAlign: 'center',
-            fontSize: '0.85rem',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          Already have an account?{' '}
-          <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>
-            Sign in
-          </Link>
-        </div>
+        <p className="rx-auth-links">
+          Already have an account? <Link to="/login">Sign in</Link>
+        </p>
       </div>
-    </div>
+    </AuthShell>
   )
 }

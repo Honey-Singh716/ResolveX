@@ -85,11 +85,17 @@ class OrganizationResponse(BaseModel):
     rejection_reason: str | None = None
     role: str  # current user's role in this org
     organization_code: str | None = None
+    organization_code_created_at: datetime | None = None
     domain_verification_status: str = "pending"
     deletion_requested_at: datetime | None = None
     deletion_scheduled_for: datetime | None = None
     ownership_transfer_target_id: UUID | None = None
     archived_at: datetime | None = None
+    # Identity provenance fields (available to organization members)
+    created_by: UUID | None = None
+    created_at: datetime | None = None   # org row creation time (not a DB column — derived)
+    verified_at: datetime | None = None
+    join_code_created_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

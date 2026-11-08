@@ -24,41 +24,19 @@ export const ClientLayout: React.FC = () => {
   }
 
   return (
-    <div className="app-shell">
-      <header className="navbar" style={{ borderBottom: '1px solid rgba(99, 102, 241, 0.2)' }}>
-        {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <Link
-            to="/home"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              fontWeight: 800,
-              fontSize: '1.15rem',
-              color: 'var(--text-main)',
-              textDecoration: 'none',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
-              }}
-            >
-              <Inbox size={18} />
-            </div>
-            <span>ResolveX <span style={{ fontSize: '0.8rem', color: '#34d399', fontWeight: 600 }}>Client Portal</span></span>
-          </Link>
-        </div>
+    <div className="app-shell rx-client">
+      <header className="navbar">
+        <Link to="/home" className="rx-client-brand">
+          <span className="rx-client-mark" aria-hidden="true">
+            <svg viewBox="0 0 16 16">
+              <rect x="1" y="1" width="6" height="6" rx="1.4" />
+              <rect x="9" y="1" width="6" height="6" rx="1.4" opacity="0.55" />
+              <rect x="1" y="9" width="6" height="6" rx="1.4" opacity="0.55" />
+              <rect x="9" y="9" width="6" height="6" rx="1.4" />
+            </svg>
+          </span>
+          ResolveX <span className="rx-client-label">Client Portal</span>
+        </Link>
 
         {/* Center Nav Links */}
         <nav className="navbar-nav" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -98,125 +76,71 @@ export const ClientLayout: React.FC = () => {
             <NavLink
               to="/platform-admin/dashboard"
               className="nav-link"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#818cf8' }}
             >
               <ShieldCheck size={16} /> Platform Admin
             </NavLink>
           )}
         </nav>
 
-        {/* Right Tools */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="rx-client-tools">
           <NotificationDropdown />
 
           {/* User Menu */}
           <div style={{ position: 'relative' }}>
             <button
+              type="button"
               onClick={() => setUserDropdownOpen((prev) => !prev)}
-              className="btn-ghost"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.35rem 0.65rem',
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid var(--border-subtle)',
-              }}
+              className="rx-user-btn"
+              aria-expanded={userDropdownOpen}
+              aria-haspopup="menu"
             >
-              <div
-                style={{
-                  width: '26px',
-                  height: '26px',
-                  borderRadius: '50%',
-                  background: 'var(--bg-surface-elevated)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#10b981',
-                }}
-              >
+              <span className="rx-user-avatar">
                 <UserIcon size={15} />
-              </div>
-              <span
-                style={{
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  maxWidth: '120px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {user?.full_name || 'Client'}
               </span>
-              <ChevronDown size={13} style={{ opacity: 0.6 }} />
+              <span className="rx-user-name">{user?.full_name || 'Client'}</span>
+              <ChevronDown size={13} aria-hidden="true" />
             </button>
 
             {userDropdownOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 6px)',
-                  right: 0,
-                  width: '230px',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-medium)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-lg)',
-                  zIndex: 60,
-                  overflow: 'hidden',
-                  padding: '0.5rem 0',
-                }}
-              >
-                <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{user?.full_name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.email}</div>
-                  <span className="badge badge-verification-approved" style={{ marginTop: '0.35rem', fontSize: '0.7rem' }}>
-                    Client Account
-                  </span>
+              <div className="rx-user-menu" role="menu">
+                <div className="rx-user-meta">
+                  <strong>{user?.full_name}</strong>
+                  <span>{user?.email}</span>
                 </div>
 
                 {user?.is_platform_admin && (
                   <button
+                    type="button"
                     onClick={() => {
                       setUserDropdownOpen(false)
                       navigate('/platform-admin/dashboard')
                     }}
-                    className="btn-ghost btn-sm"
-                    style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem', color: '#a5b4fc' }}
                   >
                     <ShieldCheck size={15} /> Platform Admin
                   </button>
                 )}
 
                 <button
+                  type="button"
                   onClick={() => {
                     setUserDropdownOpen(false)
                     navigate('/notifications')
                   }}
-                  className="btn-ghost btn-sm"
-                  style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}
                 >
                   <Inbox size={15} /> Notifications
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => {
                     setUserDropdownOpen(false)
                     navigate('/profile')
                   }}
-                  className="btn-ghost btn-sm"
-                  style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}
                 >
                   <UserIcon size={15} /> Profile
                 </button>
 
-                <div style={{ borderTop: '1px solid var(--border-subtle)', margin: '0.25rem 0' }} />
-                <button
-                  onClick={handleLogout}
-                  className="btn-ghost btn-sm"
-                  style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem', color: '#f87171' }}
-                >
+                <button type="button" className="rx-signout" onClick={handleLogout}>
                   <LogOut size={15} /> Sign Out
                 </button>
               </div>

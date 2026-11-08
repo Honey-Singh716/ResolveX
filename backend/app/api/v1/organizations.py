@@ -135,11 +135,13 @@ def _org_to_response(org: Organization, role: str) -> OrganizationResponse:
         verification_status=org.verification_status,
         rejection_reason=org.rejection_reason,
         role=role,
+        organization_code=org.organization_code,
         domain_verification_status=org.domain_verification_status,
         deletion_requested_at=org.deletion_requested_at,
         deletion_scheduled_for=org.deletion_scheduled_for,
         ownership_transfer_target_id=org.ownership_transfer_target_id,
         archived_at=org.archived_at,
+        verified_at=org.verified_at,
     )
 
 

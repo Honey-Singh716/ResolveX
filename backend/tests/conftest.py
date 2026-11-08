@@ -57,6 +57,11 @@ _TestSessionLocal = sessionmaker(
 # Pytest fixtures
 # ---------------------------------------------------------------------------
 
+@pytest.fixture(autouse=True)
+def _mock_lifespan_bootstrap(monkeypatch):
+    monkeypatch.setattr("app.main.bootstrap_platform_admin", lambda *a, **k: None)
+
+
 @pytest.fixture(scope="function")
 def db():
     """

@@ -150,3 +150,18 @@ class Organization(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+
+    # Creator provenance — the user who first created this organization.
+    # Set at creation time; preserved even if ownership is later transferred.
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    # Timestamp when the permanent organization_code was first assigned.
+    organization_code_created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
