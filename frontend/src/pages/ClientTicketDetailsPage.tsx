@@ -159,8 +159,8 @@ function CommentBubble({ comment, currentUserId }: { comment: IssueComment; curr
         {comment.author.role && (
           <span style={{
             fontSize: '0.67rem', fontWeight: 700, padding: '0.1rem 0.45rem',
-            borderRadius: 99, background: T.cream, color: T.brown,
-            border: `1px solid ${T.beige}`, textTransform: 'capitalize', whiteSpace: 'nowrap',
+            borderRadius: 99, background: T.bgCream, color: T.brown,
+            border: `1px solid ${T.bgBeige}`, textTransform: 'capitalize', whiteSpace: 'nowrap',
           }}>
             {comment.author.role === 'owner' ? 'Manager' : comment.author.role}
           </span>
