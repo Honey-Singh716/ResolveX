@@ -127,6 +127,12 @@ class OrganizationPlatformResponse(BaseModel):
     verified_by: UUID | None = None
     organization_code: str | None = None
     domain_verification_status: str = "pending"
+    # Enriched fields provided by the platform admin endpoint
+    created_at: datetime | None = None
+    owner_name: str | None = None
+    owner_email: str | None = None
+    member_count: int = 0
+    issue_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -169,6 +175,17 @@ class PlatformAdminListResponse(BaseModel):
 
 class PlatformAdminPromoteRequest(BaseModel):
     email: EmailStr
+
+
+class OrgGrowthDataPoint(BaseModel):
+    month: str   # e.g. "2026-06"
+    label: str   # e.g. "Jun 2026"
+    count: int   # organizations created in that month
+
+
+class OrgGrowthResponse(BaseModel):
+    data: list[OrgGrowthDataPoint]
+    period_months: int
 
 
 

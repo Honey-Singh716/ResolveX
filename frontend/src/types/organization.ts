@@ -138,3 +138,14 @@ export interface PlatformAdminListResponse {
   admins: PlatformAdminUser[]
   total: number
 }
+
+export interface OrgGrowthDataPoint {
+  month: string  // e.g. "2026-06"
+  label: string  // e.g. "Jun 2026"
+  count: number
+}
+
+export interface OrgGrowthResponse {
+  data: OrgGrowthDataPoint[]
+  period_months: number
+}

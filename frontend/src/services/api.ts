@@ -29,6 +29,7 @@ import type {
   PlatformAdminListResponse,
   PlatformAdminUser,
   PlatformStatsResponse,
+  OrgGrowthResponse,
 } from '../types/organization'
 
 const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').trim().replace(/\/+$/, '')
@@ -403,6 +404,12 @@ class ApiClient {
     revokeAdmin: (userId: string): Promise<void> => {
       return this.request<void>(`/platform/admins/${userId}`, {
         method: 'DELETE',
+      })
+    },
+
+    getGrowth: (months: number = 6): Promise<OrgGrowthResponse> => {
+      return this.request<OrgGrowthResponse>(`/platform/growth?months=${months}`, {
+        method: 'GET',
       })
     },
   }

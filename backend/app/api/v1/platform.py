@@ -6,10 +6,11 @@ from __future__ import annotations
 
 import uuid
 import hashlib
-from datetime import datetime, timezone
+from calendar import month_abbr
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, extract
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_platform_admin
@@ -26,6 +27,8 @@ from app.services.organization_codes import (
     generate_organization_code,
 )
 from app.schemas.organization import (
+    OrgGrowthResponse,
+    OrgGrowthDataPoint,
     OrganizationPlatformListResponse,
     OrganizationPlatformResponse,
     OrganizationVerificationAction,
@@ -60,8 +63,60 @@ def list_all_organizations(
         query.order_by(Organization.name.asc()).offset(offset).limit(page_size)
     ).all()
 
+    # Build enriched responses: owner info + member/issue counts
+    results: list[OrganizationPlatformResponse] = []
+    for org in orgs:
+        # Fetch owner membership
+        owner_membership = db.scalars(
+            select(Membership).where(
+                Membership.organization_id == org.id,
+                Membership.role == "owner",
+            )
+        ).first()
+
+        owner_name: str | None = None
+        owner_email: str | None = None
+        if owner_membership:
+            owner_user = db.get(User, owner_membership.user_id)
+            if owner_user:
+                owner_name = owner_user.full_name
+                owner_email = owner_user.email
+
+        # Count members and issues
+        member_count = db.scalar(
+            select(func.count(Membership.id)).where(Membership.organization_id == org.id)
+        ) or 0
+        issue_count = db.scalar(
+            select(func.count(Issue.id)).where(Issue.organization_id == org.id)
+        ) or 0
+
+        results.append(
+            OrganizationPlatformResponse(
+                id=org.id,
+                name=org.name,
+                slug=org.slug,
+                industry=org.industry,
+                official_email_domain=org.official_email_domain,
+                official_website=org.official_website,
+                proof_document_reference=org.proof_document_reference,
+                contact_phone=org.contact_phone,
+                is_active=org.is_active,
+                verification_status=org.verification_status,
+                rejection_reason=org.rejection_reason,
+                verified_at=org.verified_at,
+                verified_by=org.verified_by,
+                organization_code=org.organization_code,
+                domain_verification_status=org.domain_verification_status,
+                created_at=org.created_at,
+                owner_name=owner_name,
+                owner_email=owner_email,
+                member_count=member_count,
+                issue_count=issue_count,
+            )
+        )
+
     return OrganizationPlatformListResponse(
-        organizations=list(orgs),
+        organizations=results,
         total=total,
         page=page,
         page_size=page_size,
@@ -277,6 +332,63 @@ def get_platform_stats(
         total_users=total_users,
         total_issues=total_issues,
     )
+
+
+@router.get(
+    "/growth",
+    response_model=OrgGrowthResponse,
+    summary="Get organization registration growth by month (Platform Admin only)",
+)
+def get_org_growth(
+    months: int = Query(6, ge=1, le=24, description="Number of recent months to return"),
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_platform_admin),
+) -> OrgGrowthResponse:
+    """Return a month-by-month count of newly registered organizations."""
+    now = datetime.now(timezone.utc)
+
+    # Build a list of the target months (oldest first)
+    month_keys: list[tuple[int, int]] = []
+    for i in range(months - 1, -1, -1):
+        # Walk backwards from current month
+        year = now.year
+        month = now.month - i
+        while month <= 0:
+            month += 12
+            year -= 1
+        month_keys.append((year, month))
+
+    # Query raw counts grouped by (year, month) from the Organization table.
+    # Organization.created_at is a server_default=func.now() column.
+    rows = db.execute(
+        select(
+            extract("year", Organization.created_at).label("yr"),
+            extract("month", Organization.created_at).label("mo"),
+            func.count(Organization.id).label("cnt"),
+        )
+        .where(
+            Organization.created_at >= datetime(month_keys[0][0], month_keys[0][1], 1, tzinfo=timezone.utc)
+        )
+        .group_by("yr", "mo")
+    ).all()
+
+    count_map: dict[tuple[int, int], int] = {
+        (int(r.yr), int(r.mo)): int(r.cnt) for r in rows
+    }
+
+    data: list[OrgGrowthDataPoint] = []
+    for year, month in month_keys:
+        label = f"{month_abbr[month]} {year}"
+        month_str = f"{year:04d}-{month:02d}"
+        data.append(
+            OrgGrowthDataPoint(
+                month=month_str,
+                label=label,
+                count=count_map.get((year, month), 0),
+            )
+        )
+
+    return OrgGrowthResponse(data=data, period_months=months)
 
 
 @router.get(

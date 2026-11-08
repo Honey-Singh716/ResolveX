@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Uuid
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -164,4 +164,12 @@ class Organization(Base):
     organization_code_created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+    )
+
+    # Timestamp when the organization was first created/registered.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
